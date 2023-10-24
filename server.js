@@ -1015,9 +1015,10 @@ io.on('connection', (socket) => {
     io.emit('connection-status', { uid, connected: false });
   });
   socket.on('subject-and-class', (data) => {
-    const selectedSubject = data.subject;
-    const selectedClass = data.grade;
-    io.emit('selected-subject-and-class', data);
+    const { subject, grade } = data;
+    console.log('Received Subject: ' + subject);
+    console.log('Received Class: ' + grade);
+    socket.emit('selected-subject-and-class', { subject, grade });
     });
 });
 
