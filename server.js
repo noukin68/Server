@@ -966,6 +966,25 @@ app.post('/uidLogin', (req, res) => {
   });
 });
 
+let receivedData = null;
+
+app.post('/receive-data', (req, res) => {
+const data = req.body;
+console.log('Получены данные от клиента:');
+console.log('Предмет:', data.subject);
+console.log('Класс:', data.grade);
+receivedData = data;
+res.sendStatus(200);
+});
+
+app.get('/get-data', (req, res) => {
+if (receivedData) {
+res.json(receivedData);
+} else {
+res.status(404).send('Данные не найдены');
+}
+});
+
 io.on('connection', (socket) => {
   let clientType = 'Unknown';
   let isDeviceConnected = false;
