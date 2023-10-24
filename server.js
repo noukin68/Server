@@ -1013,9 +1013,14 @@ io.on('connection', (socket) => {
       io.emit('connection-status', { uid, connected: false });
     }
     io.emit('connection-status', { uid, connected: false });
+  });
+  socket.on('subject-and-class', (data) => {
+    const selectedSubject = data.subject;
+    const selectedClass = data.grade;
+    io.emit('selected-subject-and-class', data);
+    });
 });
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
-})
 });
