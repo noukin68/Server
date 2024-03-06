@@ -919,7 +919,7 @@ io.on('connection', (socket) => {
   socket.on('register', async (data) => {
     const { username, password } = data;
 
-    const checkUserQuery = 'SELECT * FROM usercredentials WHERE Username = ?';
+    const checkUserQuery = 'SELECT * FROM UserCredentials WHERE Username = ?';
     db.query(checkUserQuery, [username], async (err, result) => {
       if (err) {
         console.error('Error checking user:', err);
@@ -937,7 +937,7 @@ io.on('connection', (socket) => {
 
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const userQuery = 'INSERT INTO users (UID) VALUES (?)';
+        const userQuery = 'INSERT INTO Users (UID) VALUES (?)';
         db.query(userQuery, [uid], async (err, result) => {
           if (err) {
             console.error('Error inserting user:', err);
@@ -946,7 +946,7 @@ io.on('connection', (socket) => {
 
           const userId = result.insertId;
 
-          const credentialsQuery = 'INSERT INTO usercredentials (UserID, Username, PasswordHash) VALUES (?, ?, ?)';
+          const credentialsQuery = 'INSERT INTO UserCredentials (UserID, Username, PasswordHash) VALUES (?, ?, ?)';
           db.query(credentialsQuery, [userId, username, hashedPassword], (err, result) => {
             if (err) {
               console.error('Error inserting credentials:', err);
