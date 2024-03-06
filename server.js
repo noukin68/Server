@@ -1,9 +1,10 @@
 const express = require('express');
 const mysql = require('mysql');
 const cors = require('cors');
-
 const http = require('http');
 const socketIo = require('socket.io');
+const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const server = http.createServer(app);
@@ -26,6 +27,12 @@ db.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
 
 app.use(cors());
 app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
+});
 
 //Вход администратора
 app.post('/login', (req, res) => {
@@ -904,6 +911,194 @@ db.query(
 });
 
 //--Родительский контроль--//
+
+const socketUidMap = new Map();
+
+io.on('connection', (socket) => {
+
+  socket.on('register', async (data) => {
+    const { username, password } = data;
+
+    const checkUserQuery = 'SELECT * FROM UserCredentials WHERE Username = ?';
+    db.query(checkUserQuery, [username], async (err, result) => {
+      if (err) {
+        console.error('Error checking user:', err);
+        return socket.emit('registrationError', { message: 'An error occurred while checking the user.' });
+      }
+
+      if (result.length > 0) {
+        return socket.emit('registrationError', { message: 'User already exists.' });
+      }
+
+      const uid = uuidv4();
+
+      try {
+        const salt = await bcrypt.genSalt(10);
+
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const userQuery = 'INSERT INTO Users (UID) VALUES (?)';
+        db.query(userQuery, [uid], async (err, result) => {
+          if (err) {
+            console.error('Error inserting user:', err);
+            return socket.emit('registrationError', { message: 'An error occurred while registering the user.' });
+          }
+
+          const userId = result.insertId;
+
+          const credentialsQuery = 'INSERT INTO UserCredentials (UserID, Username, PasswordHash) VALUES (?, ?, ?)';
+          db.query(credentialsQuery, [userId, username, hashedPassword], (err, result) => {
+            if (err) {
+              console.error('Error inserting credentials:', err);
+              return socket.emit('registrationError', { message: 'An error occurred while registering the user.' });
+            }
+            socketUidMap.set(socket, uid);
+            
+            socket.emit('registrationSuccess', { message: 'User registered successfully!' });
+            console.log(`Пользователь ${username} (UID: ${uid}) успешно зарегистрирован.`);
+          });
+        });
+      } catch (error) {
+        console.error('Error hashing password:', error);
+        return socket.emit('registrationError', { message: 'An error occurred while hashing the password.' });
+      }
+    });
+  });
+
+  socket.on('login', async (data) => {
+    const { username, password, platform } = data;
+
+    const checkUserQuery = 'SELECT * FROM UserCredentials WHERE Username = ?';
+    db.query(checkUserQuery, [username], async (err, result) => {
+      if (err) {
+        console.error('Error checking user:', err);
+        return socket.emit('loginError', { message: 'An error occurred while checking the user.' });
+      }
+
+      if (result.length === 0) {
+        return socket.emit('loginError', { message: 'User does not exist.' });
+      }
+
+      const user = result[0];
+
+      const passwordMatch = await bcrypt.compare(password, user.PasswordHash);
+
+      if (!passwordMatch) {
+        return socket.emit('loginError', { message: 'Incorrect password.' });
+      }
+
+      const getUIDQuery = 'SELECT UID FROM Users WHERE UserID = ?';
+      db.query(getUIDQuery, [user.UserID], (err, uidResult) => {
+        if (err) {
+          console.error('Ошибка при получении UID пользователя:', err);
+          return socket.emit('loginError', { message: 'Произошла ошибка при получении UID пользователя.' });
+        }
+
+        const uid = uidResult[0].UID;
+
+       
+        //socket.uid = uid;
+
+        socketUidMap.set(socket, uid);
+
+
+        socket.emit('loginSuccess', { message: 'Пользователь успешно вошел!', userId: user.UserID, uid: uid, platform: platform });
+        console.log(`Пользователь ${username} (UID: ${uid}, Платформа: ${platform}) успешно вошел.`);
+      });
+    });
+  });
+
+
+
+  socket.on('disconnect', async () => {
+    const uid = socketUidMap.get(socket);
+    if (uid) {
+      const getUsernameQuery = 'SELECT Username FROM UserCredentials WHERE UserID = (SELECT UserID FROM Users WHERE UID = ?)';
+      db.query(getUsernameQuery, [uid], (err, usernameResult) => {
+        if (err) {
+          console.error('Ошибка при получении имени пользователя:', err);
+        } else {
+          const username = usernameResult[0] ? usernameResult[0].Username : 'Неизвестный';
+          socketUidMap.delete(socket);
+          console.log(`Пользователь ${username} (UID: ${uid}) отключился.`);
+        }
+      });
+    } else {
+      console.log('Пользователь отключился без UID.');
+    }
+  });
+
+  socket.on('sendMessage', (data) => {
+    const { uid, message } = data;
+    const recipientSocket = Array.from(socketUidMap.entries()).find((entry) => entry[1] === uid)?.[0];
+  
+    if (recipientSocket && recipientSocket.connected) {
+      io.to(recipientSocket.id).emit('message', { uid, message });
+      console.log(`Сообщение отправлено пользователю с UID: ${uid}`);
+      console.log(`Содержание сообщения: ${message}`);
+    } else {
+      console.log(`Пользователь с UID ${uid} не найден или не в сети`);
+      socket.emit('messageError', { message: 'Пользователь не в сети или не существует.' });
+    }
+  });
+  
+});
+
+app.post('/assignLicense', (req, res) => {
+  const { userId } = req.body;
+
+  const licenseKey = uuidv4();
+
+  const purchaseDate = new Date();
+
+  const licenseQuery = 'INSERT INTO Licenses (LicenseKey, UserID, PurchaseDate) VALUES (?, ?, ?)';
+  db.query(licenseQuery, [licenseKey, userId, purchaseDate], (err, licenseResult) => {
+    if (err) {
+      console.error('Ошибка при вставке лицензии:', err);
+      return res.status(500).json({ message: 'Произошла ошибка при выдаче лицензии.' });
+    }
+
+    const licenseId = licenseResult.insertId;
+
+    const purchaseQuery = 'INSERT INTO Purchases (UserID, LicenseID, PurchaseDate) VALUES (?, ?, ?)';
+    db.query(purchaseQuery, [userId, licenseId, purchaseDate], (err, purchaseResult) => {
+      if (err) {
+        console.error('Ошибка при вставке покупки:', err);
+        return res.status(500).json({ message: 'Произошла ошибка при выдаче лицензии.' });
+      }
+
+      const updateUserQuery = 'UPDATE Users SET hasLicense = 1 WHERE UserID = ?';
+      db.query(updateUserQuery, [userId], (err, updateResult) => {
+        if (err) {
+          console.error('Ошибка при обновлении статуса покупки:', err);
+          return res.status(500).json({ message: 'Произошла ошибка при обновлении статуса покупки.' });
+        }
+
+        res.json({ message: 'Лицензия успешно выдана пользователю.', licenseKey: licenseKey });
+        console.log(`Лицензия с ключом ${licenseKey} успешно выдана пользователю с UserID ${userId}.`);
+      });
+    });
+  });
+});
+
+app.post('/checkLicense', (req, res) => {
+  const { userId } = req.body;
+
+  const checkLicenseQuery = 'SELECT * FROM Users WHERE UserID = ? AND hasLicense = 1';
+  db.query(checkLicenseQuery, [userId], (err, result) => {
+    if (err) {
+      console.error('Ошибка при проверке лицензии:', err);
+      return res.status(500).json({ message: 'Произошла ошибка при проверке лицензии пользователя.' });
+    }
+
+    if (result.length === 0) {
+      return res.json({ hasLicense: false });
+    } else {
+      return res.json({ hasLicense: true });
+    }
+  });
+});
+
 app.get('/notify', (req, res) => {
   io.emit('test-completed', {
     message: 'Тест завершен' 
