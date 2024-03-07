@@ -915,30 +915,55 @@ db.query(
 const socketUidMap = new Map();
 
 io.on('connection', (socket) => {
-  console.log('Socket connected');
 
-  // Проверка подключения к базе данных
-  db.getConnection(function(err, connection) {
+  socket.on('register', async (data) => {
+    const { username, password } = data;
+
+    const checkUserQuery = 'SELECT * FROM UserCredentials WHERE Username = ?';
+    db.query(checkUserQuery, [username], async (err, result) => {
       if (err) {
-          console.error('Error connecting to database:', err);
-          socket.emit('databaseError', { message: 'Error connecting to database' });
-          return;
+        console.error('Error checking user:', err);
+        return socket.emit('registrationError', { message: 'An error occurred while checking the user.' });
       }
-      console.log('Database connected successfully');
 
-      // Пример выполнения запроса на чтение данных
-      connection.query('SELECT * FROM UserCredentials LIMIT 1', function (error, results, fields) {
-          connection.release();
-          if (error) {
-              console.error('Error querying database:', error);
-              socket.emit('databaseError', { message: 'Error querying database' });
-              return;
+      if (result.length > 0) {
+        return socket.emit('registrationError', { message: 'User already exists.' });
+      }
+
+      const uid = uuidv4();
+
+      try {
+        const salt = await bcrypt.genSalt(10);
+
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const userQuery = 'INSERT INTO Users (UID) VALUES (?)';
+        db.query(userQuery, [uid], async (err, result) => {
+          if (err) {
+            console.error('Error inserting user:', err);
+            return socket.emit('registrationError', { message: 'An error occurred while registering the user.' });
           }
-          console.log('Query executed successfully:', results);
-          socket.emit('databaseSuccess', { message: 'Database query successful' });
-      });
-  });
 
+          const userId = result.insertId;
+
+          const credentialsQuery = 'INSERT INTO UserCredentials (UserID, Username, PasswordHash) VALUES (?, ?, ?)';
+          db.query(credentialsQuery, [userId, username, hashedPassword], (err, result) => {
+            if (err) {
+              console.error('Error inserting credentials:', err);
+              return socket.emit('registrationError', { message: 'An error occurred while registering the user.' });
+            }
+            socketUidMap.set(socket, uid);
+            
+            socket.emit('registrationSuccess', { message: 'User registered successfully!' });
+            console.log(`Пользователь ${username} (UID: ${uid}) успешно зарегистрирован.`);
+          });
+        });
+      } catch (error) {
+        console.error('Error hashing password:', error);
+        return socket.emit('registrationError', { message: 'An error occurred while hashing the password.' });
+      }
+    });
+  });
 
   socket.on('login', async (data) => {
     const { username, password, platform } = data;
