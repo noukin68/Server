@@ -14,10 +14,10 @@ const port = 3000;
 
 const db = mysql.createPool({
   connectionLimit : 10,
-  host: 'marencid.beget.tech',
-  user: 'marencid_tech',
+  host: 'localhost',
+  user: 'root',
   password: 'Root123',
-  database: 'marencid_tech',
+  database: 'ParentalControlDB',
 });
 
 db.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
