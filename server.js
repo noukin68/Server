@@ -914,38 +914,37 @@ db.query(
 
 const socketUidMap = new Map();
 
-app.post('/register', async (req, res) => {
-  const { username, password } = req.body;
-  const checkUserQuery = 'SELECT * FROM UserCredentials WHERE Username = ?';
-  
-  try {
-    const result = await db.query(checkUserQuery, [username]);
+  socket.on('register', async (data) => {
+      const { username, password } = data;
+      const checkUserQuery = 'SELECT * FROM UserCredentials WHERE Username = ?';
+      
+      try {
+          const result = await db.query(checkUserQuery, [username]);
 
-    if (result.length > 0) {
-      return res.status(400).json({ message: 'User already exists.' });
-    }
+          if (result.length > 0) {
+              return socket.emit('registrationError', { message: 'User already exists.' });
+          }
 
-    const uid = uuidv4();
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+          const uid = uuidv4();
+          const salt = await bcrypt.genSalt(10);
+          const hashedPassword = await bcrypt.hash(password, salt);
 
-    const userQuery = 'INSERT INTO Users (UID) VALUES (?)';
-    const userInsertResult = await db.query(userQuery, [uid]);
-    const userId = userInsertResult.insertId;
+          const userQuery = 'INSERT INTO Users (UID) VALUES (?)';
+          const userInsertResult = await db.query(userQuery, [uid]);
+          const userId = userInsertResult.insertId;
 
-    const credentialsQuery = 'INSERT INTO UserCredentials (UserID, Username, PasswordHash) VALUES (?, ?, ?)';
-    await db.query(credentialsQuery, [userId, username, hashedPassword]);
+          const credentialsQuery = 'INSERT INTO UserCredentials (UserID, Username, PasswordHash) VALUES (?, ?, ?)';
+          await db.query(credentialsQuery, [userId, username, hashedPassword]);
 
-    // Emit an event to the client indicating successful registration
-    io.emit('registrationSuccess', { message: 'User registered successfully!' });
-    console.log(`Пользователь ${username} (UID: ${uid}) успешно зарегистрирован.`);
+          socketUidMap.set(socket, uid);
+          socket.emit('registrationSuccess', { message: 'User registered successfully!' });
+          console.log(`Пользователь ${username} (UID: ${uid}) успешно зарегистрирован.`);
+      } catch (error) {
+          console.error('Error during registration:', error);
+          socket.emit('registrationError', { message: 'An error occurred while registering the user.' });
+      }
+  });
 
-    res.status(200).json({ message: 'User registered successfully!' });
-  } catch (error) {
-    console.error('Error during registration:', error);
-    res.status(500).json({ message: 'An error occurred while registering the user.' });
-  }
-});
 
 
   socket.on('login', async (data) => {
@@ -1024,8 +1023,6 @@ app.post('/register', async (req, res) => {
       socket.emit('messageError', { message: 'Пользователь не в сети или не существует.' });
     }
   });
-  
-
 
 app.post('/assignLicense', (req, res) => {
   const { userId } = req.body;
