@@ -914,7 +914,8 @@ db.query(
 
 const socketUidMap = new Map();
 
-  socket.on('register', async (data) => {
+io.on('connection', (socket) => {
+  socket.on('/register', async (data) => {
       const { username, password } = data;
       const checkUserQuery = 'SELECT * FROM UserCredentials WHERE Username = ?';
       
@@ -1023,6 +1024,8 @@ const socketUidMap = new Map();
       socket.emit('messageError', { message: 'Пользователь не в сети или не существует.' });
     }
   });
+  
+});
 
 app.post('/assignLicense', (req, res) => {
   const { userId } = req.body;
