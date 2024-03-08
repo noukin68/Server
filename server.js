@@ -917,7 +917,7 @@ const socketUidMap = new Map();
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   const checkUserQuery = 'SELECT * FROM UserCredentials WHERE Username = ?';
-
+  
   try {
     const result = await db.query(checkUserQuery, [username]);
 
@@ -936,15 +936,16 @@ app.post('/register', async (req, res) => {
     const credentialsQuery = 'INSERT INTO UserCredentials (UserID, Username, PasswordHash) VALUES (?, ?, ?)';
     await db.query(credentialsQuery, [userId, username, hashedPassword]);
 
-    res.status(200).json({ message: 'User registered successfully!' });
+    // Emit an event to the client indicating successful registration
+    io.emit('registrationSuccess', { message: 'User registered successfully!' });
     console.log(`Пользователь ${username} (UID: ${uid}) успешно зарегистрирован.`);
+
+    res.status(200).json({ message: 'User registered successfully!' });
   } catch (error) {
     console.error('Error during registration:', error);
     res.status(500).json({ message: 'An error occurred while registering the user.' });
   }
 });
-
-
 
 
   socket.on('login', async (data) => {
