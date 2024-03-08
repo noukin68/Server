@@ -962,36 +962,6 @@ app.get('/restartTimer', (req, res) => {
   res.send('Уведомление отправлено');
 });
 
-app.post('/saveUid', (req, res) => {
-  const uid = req.body.uid;
-
-  const checkSql = 'SELECT COUNT(*) AS count FROM uid WHERE uidcol = ?';
-
-  db.query(checkSql, [uid], (err, result) => {
-    if (err) {
-      console.error('Ошибка при выполнении SQL запроса:', err);
-      res.status(500).send('Ошибка сервера');
-    } else {
-      const count = result[0].count;
-
-      if (count === 0) {
-        const insertSql = 'INSERT INTO uid (uidcol) VALUES (?)';
-        db.query(insertSql, [uid], (err, result) => {
-          if (err) {
-            console.error('Ошибка при выполнении SQL запроса:', err);
-            res.status(500).send('Ошибка сервера');
-          } else {
-            console.log('UID успешно сохранен в баdbзе данных');
-            res.status(200).send('UID успешно сохранен');
-          }
-        });
-      } else {
-        console.log('UID уже существует в базе данных');
-        res.status(200).send('UID уже существует');
-      }
-    }
-  });
-});
 
 app.post('/uidLogin', (req, res) => {
   const { uid } = req.body;
