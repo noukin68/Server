@@ -11,6 +11,7 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 const port = 3000;
+const clients = {};
 
 const db = mysql.createPool({
   connectionLimit : 10,
@@ -912,29 +913,6 @@ db.query(
 
 //--Родительский контроль--//
 
-const clients = {};
-
-app.post('/command', (req, res) => {
-  const { uid, action } = req.body;
-  if (!uid || !action) {
-    return res.status(400).json({ message: 'Необходимо указать UID и действие' });
-  }
-
-  const targetSocket = clients[uid];
-  if (!targetSocket) {
-    return res.status(404).json({ message: 'UID не найден' });
-  }
-
-  targetSocket.emit('action', action);
-  return res.status(200).json({ message: 'Действие отправлено' });
-});
-
-app.get('/check_uid/:uid', (req, res) => {
-  const { uid } = req.params;
-  const exists = clients[uid] !== undefined;
-  return res.status(200).json({ uid, exists });
-});
-
 io.on('connection', (socket) => {
   console.log('Новый клиент подключен');
 
@@ -945,12 +923,30 @@ io.on('connection', (socket) => {
 
   socket.emit('uid', uid);
 
+  socket.on('command', (command) => {
+    const targetUid = command.uid;
+    const action = command.action;
+
+    const targetSocket = clients[targetUid];
+    if (!targetSocket) {
+        socket.emit('error', 'UID not found');
+        return;
+    }
+
+    targetSocket.emit('action', action);
+});
+
+socket.on('check_uid', (uid) => {
+    const exists = clients[uid] !== undefined;
+    socket.emit('uid_check_result', { uid, exists });
+});
+
   socket.on('disconnect', () => {
     console.log('Клиент отключен');
     delete clients[socket.uid];
   });
-});
 
+});
 
 app.get('/notify', (req, res) => {
   io.emit('test-completed', {
