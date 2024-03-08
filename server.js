@@ -917,7 +917,7 @@ const socketUidMap = new Map();
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   const checkUserQuery = 'SELECT * FROM UserCredentials WHERE Username = ?';
-  
+
   try {
     const result = await db.query(checkUserQuery, [username]);
 
@@ -942,7 +942,8 @@ app.post('/register', async (req, res) => {
     console.error('Error during registration:', error);
     res.status(500).json({ message: 'An error occurred while registering the user.' });
   }
-  });
+});
+
 
 
 
