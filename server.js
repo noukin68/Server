@@ -937,12 +937,11 @@ io.on('connection', (socket) => {
     if (action === 'startTest') {
       // Здесь отправляем команду startTest обратно на клиентский сокет
       targetSocket.emit('action', action);
-    } else if (action === 'closeApp') {
-      // Закрыть приложение WPF
-      targetSocket.emit('action', action);
     } else {
       // Обработка других команд
     }
+
+    targetSocket.emit('action', action);
 });
 
 socket.on('check_uid', (uid) => {
