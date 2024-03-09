@@ -918,12 +918,10 @@ io.on('connection', (socket) => {
   console.log('Новый клиент подключен');
 
   const uid = Date.now().toString();
+  const targetUid = uid; // Определяем targetUid
 
   socket.uid = uid;
   clients[uid] = socket;
-
-  const targetUid = uid;
-  const action = action;
 
   socket.emit('uid', uid);
 
@@ -954,18 +952,16 @@ io.on('connection', (socket) => {
     console.log('Received Subject: ' + subject);
     console.log('Received Class: ' + grade);
     targetSocket.emit('selected-subject-and-class', { subject, grade });
-    });
+  });
 
   socket.on('command', (command) => {
-    command.uid;
-    command.action;
-
+    const action = command.action; // Получаем action из command
     const targetSocket = clients[targetUid];
     if (!targetSocket) {
         socket.emit('error', 'UID not found');
         return;
     }
-      targetSocket.emit('action', action);
+    targetSocket.emit('action', action);
 });
 
 socket.on('check_uid', (uid) => {
