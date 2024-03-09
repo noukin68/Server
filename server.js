@@ -927,7 +927,7 @@ io.on('connection', (socket) => {
   socket.on('command', (command) => {
     const targetUid = command.uid;
     const action = command.action; 
-    const data = command.data;
+    const con = command.data;
     
 
     const targetSocket = clients[targetUid];
@@ -939,7 +939,7 @@ io.on('connection', (socket) => {
 
     switch (action) {
         case 'time-received':
-            const timeInSeconds = command.data;
+            const timeInSeconds = con;
             console.log('Received time:', timeInSeconds);
             targetSocket.emit('time-received', timeInSeconds);
             break;
