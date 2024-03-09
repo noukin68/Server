@@ -927,6 +927,7 @@ io.on('connection', (socket) => {
   socket.on('command', (command) => {
     const targetUid = command.uid;
     const action = command.action; 
+    const data = command.data;
     
 
     const targetSocket = clients[targetUid];
