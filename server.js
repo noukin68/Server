@@ -941,7 +941,7 @@ io.on('connection', (socket) => {
         case 'time-received':
             const timeInSeconds = command.data;
             console.log('Received time:', timeInSeconds);
-            targetSocket.emit('time-received', timeInSeconds);
+            socket.emit('time-received', timeInSeconds);
             break;
         case 'stop-timer':
             const totalSeconds = command.data;
