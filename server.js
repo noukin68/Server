@@ -962,12 +962,13 @@ io.on('connection', (socket) => {
             const data = command.data;
             targetSocket.emit('process-data', data);
             break;
-        case 'subject-and-class':
-            const { subject, grade } = command.data;
-            console.log('Received Subject: ' + subject);
-            console.log('Received Class: ' + grade);
-            targetSocket.emit('selected-subject-and-class', { subject, grade });
-            break;
+            case 'subject-and-class':
+              const subject = command.data.subject;
+              const grade = command.data.grade;
+              console.log('Received Subject: ' + subject);
+              console.log('Received Class: ' + grade);
+              targetSocket.emit('selected-subject-and-class', { subject, grade });
+              break;          
         default:
             break;
     }
