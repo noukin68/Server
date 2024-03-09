@@ -918,7 +918,6 @@ io.on('connection', (socket) => {
   console.log('Новый клиент подключен');
 
   const uid = Date.now().toString();
-  const targetUid = uid; // Определяем targetUid
 
   socket.uid = uid;
   clients[uid] = socket;
@@ -955,13 +954,50 @@ io.on('connection', (socket) => {
   });
 
   socket.on('command', (command) => {
-    const action = command.action; // Получаем action из command
+    const targetUid = command.targetUid;
+    const action = command.action; 
+
     const targetSocket = clients[targetUid];
+    
     if (!targetSocket) {
         socket.emit('error', 'UID not found');
         return;
     }
-    targetSocket.emit('action', action);
+
+    switch (action) {
+        case 'time-received':
+            const timeInSeconds = command.data;
+            console.log('Received time:', timeInSeconds);
+            targetSocket.emit('time-received', timeInSeconds);
+            break;
+        case 'stop-timer':
+            const totalSeconds = command.data;
+            console.log(`Таймер был остановлен со значением: ${totalSeconds} секунд`);
+            targetSocket.emit('stop-timer', totalSeconds);
+            break;
+        case 'timer-finished':
+            console.log('Timer finished');
+            targetSocket.emit('timer-finished');
+            break;
+        case 'continue-work':
+            targetSocket.emit('continue-work');
+            break;
+        case 'finish-work':
+            targetSocket.emit('finish-work');
+            break;
+        case 'process-data':
+            const data = command.data;
+            targetSocket.emit('process-data', data);
+            break;
+        case 'subject-and-class':
+            const { subject, grade } = command.data;
+            console.log('Received Subject: ' + subject);
+            console.log('Received Class: ' + grade);
+            targetSocket.emit('selected-subject-and-class', { subject, grade });
+            break;
+        default:
+            break;
+    }
 });
 
 socket.on('check_uid', (uid) => {
