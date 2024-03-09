@@ -1001,17 +1001,16 @@ let receivedData = null;
 app.post('/receive-data', (req, res) => {
   const { action, data } = req.body;
 
-  if (action === 'subject-and-class') {
+  if (action === 'subject-and-class' && data) {
     console.log('Получены данные о предмете и классе от клиента:');
     console.log('Предмет:', data.subject);
     console.log('Класс:', data.grade);
     // Ваши дальнейшие действия с полученными данными
     res.sendStatus(200); // Отправляем статус успеха клиенту
   } else {
-    res.status(400).send('Неподдерживаемое действие'); // Если действие не поддерживается, возвращаем ошибку
+    res.status(400).send('Неподдерживаемое действие или отсутствуют данные'); // Если действие не поддерживается или отсутствуют данные, возвращаем ошибку
   }
 });
-
 
 app.get('/get-data', (req, res) => {
 if (receivedData) {
