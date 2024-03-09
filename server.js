@@ -969,6 +969,7 @@ io.on('connection', (socket) => {
         default:
             break;
     }
+    
 });
 
 socket.on('check_uid', (uid) => {
@@ -998,13 +999,19 @@ app.get('/restartTimer', (req, res) => {
 let receivedData = null;
 
 app.post('/receive-data', (req, res) => {
-const data = req.body;
-console.log('Получены данные от клиента:');
-console.log('Предмет:', data.subject);
-console.log('Класс:', data.grade);
-receivedData = data;
-res.sendStatus(200);
+  const { action, data } = req.body;
+
+  if (action === 'subject-and-class') {
+    console.log('Получены данные о предмете и классе от клиента:');
+    console.log('Предмет:', data.subject);
+    console.log('Класс:', data.grade);
+    // Ваши дальнейшие действия с полученными данными
+    res.sendStatus(200); // Отправляем статус успеха клиенту
+  } else {
+    res.status(400).send('Неподдерживаемое действие'); // Если действие не поддерживается, возвращаем ошибку
+  }
 });
+
 
 app.get('/get-data', (req, res) => {
 if (receivedData) {
