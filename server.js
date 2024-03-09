@@ -924,6 +924,35 @@ io.on('connection', (socket) => {
 
   socket.emit('uid', uid);
 
+  socket.on('time-received', (timeInSeconds) => {
+    console.log('Received time:', timeInSeconds);
+    io.emit('time-received', timeInSeconds);
+  });
+  socket.on('stop-timer', (totalSeconds) => {
+    console.log(`Таймер был остановлен со значением: ${totalSeconds} секунд`);
+    io.emit('stop-timer', totalSeconds);
+  });
+  socket.on('timer-finished', () => {
+    console.log('Timer finished');
+    io.emit('timer-finished');
+  });
+  socket.on('continue-work', () => {
+    io.emit('continue-work');
+  });
+  socket.on('finish-work', () => {
+    io.emit('finish-work');
+  });
+  socket.on('process-data', (data) => {
+    io.emit('process-data', data);
+  });
+
+  socket.on('subject-and-class', (data) => {
+    const { subject, grade } = data;
+    console.log('Received Subject: ' + subject);
+    console.log('Received Class: ' + grade);
+    socket.emit('selected-subject-and-class', { subject, grade });
+    });
+
   socket.on('command', (command) => {
     const targetUid = command.uid;
     const action = command.action;
@@ -953,7 +982,6 @@ socket.on('check_uid', (uid) => {
     console.log('Клиент отключен');
     delete clients[socket.uid];
   });
-
 });
 
 app.get('/notify', (req, res) => {
@@ -967,55 +995,6 @@ app.get('/restartTimer', (req, res) => {
   io.emit('restart-timer', {
   });
   res.send('Уведомление отправлено');
-});
-
-app.post('/saveUid', (req, res) => {
-  const uid = req.body.uid;
-
-  const checkSql = 'SELECT COUNT(*) AS count FROM uid WHERE uidcol = ?';
-
-  db.query(checkSql, [uid], (err, result) => {
-    if (err) {
-      console.error('Ошибка при выполнении SQL запроса:', err);
-      res.status(500).send('Ошибка сервера');
-    } else {
-      const count = result[0].count;
-
-      if (count === 0) {
-        const insertSql = 'INSERT INTO uid (uidcol) VALUES (?)';
-        db.query(insertSql, [uid], (err, result) => {
-          if (err) {
-            console.error('Ошибка при выполнении SQL запроса:', err);
-            res.status(500).send('Ошибка сервера');
-          } else {
-            console.log('UID успешно сохранен в баdbзе данных');
-            res.status(200).send('UID успешно сохранен');
-          }
-        });
-      } else {
-        console.log('UID уже существует в базе данных');
-        res.status(200).send('UID уже существует');
-      }
-    }
-  });
-});
-
-app.post('/uidLogin', (req, res) => {
-  const { uid } = req.body;
-  if (!uid) {
-    return res.status(400).json({ message: 'Введите номер UID' });
-  }
-  db.query('SELECT * FROM uid WHERE uidcol = ?', [uid], (err, results) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: 'Ошибка сервера' });
-    }
-    if (results.length === 0) {
-      return res.status(401).json({ message: 'Неверный UID' });
-    }
-    io.emit('uid-authorized', {});
-    return res.status(200).json({ message: 'Успешная авторизация' });
-  });
 });
 
 let receivedData = null;
@@ -1035,62 +1014,6 @@ res.json(receivedData);
 } else {
 res.status(404).send('Данные не найдены');
 }
-});
-
-io.on('connection', (socket) => {
-  let clientType = 'Unknown';
-  let isDeviceConnected = false;
-  socket.on('client-type', (clientType, uid) => {
-    socket.clientType = clientType;
-    socket.uid = uid;
-    socket.emit('welcome', `Добро пожаловать на сервер, ${clientType} устройство с UID ${uid}`);
-    io.emit('user-connected', {
-      clientType: clientType,
-      uid: uid
-    });
-    console.log(`Подключено ${clientType} устройство с UID ${uid}`);
-  });
-
-  socket.on('wpf-disconnected', () => {
-    io.emit('connection-status', { connected: false });
-  });
-  socket.on('time-received', (timeInSeconds) => {
-    console.log('Received time:', timeInSeconds);
-    io.emit('time-received', timeInSeconds);
-  });
-  // Обработчик для события "stop-timer"
-  socket.on('stop-timer', (totalSeconds) => {
-    console.log(`Таймер был остановлен со значением: ${totalSeconds} секунд`);
-    io.emit('stop-timer', totalSeconds);
-  });
-  socket.on('timer-finished', () => {
-    console.log('Timer finished');
-    io.emit('timer-finished');
-  });
-  socket.on('continue-work', () => {
-    io.emit('continue-work');
-  });
-  socket.on('finish-work', () => {
-    io.emit('finish-work');
-  });
-  socket.on('process-data', (data) => {
-    io.emit('process-data', data);
-  });
-  socket.on('disconnect', () => {
-    const { clientType, uid } = socket;
-    if (clientType && uid) {
-      console.log(`A ${clientType} app with UID ${uid} disconnected`);
-      io.emit('user-disconnected', `${clientType} app with UID ${uid} disconnected`);
-      io.emit('connection-status', { uid, connected: false });
-    }
-    io.emit('connection-status', { uid, connected: false });
-  });
-  socket.on('subject-and-class', (data) => {
-    const { subject, grade } = data;
-    console.log('Received Subject: ' + subject);
-    console.log('Received Class: ' + grade);
-    socket.emit('selected-subject-and-class', { subject, grade });
-    });
 });
 
 server.listen(port, () => {
