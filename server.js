@@ -928,6 +928,8 @@ io.on('connection', (socket) => {
     console.log('Received command:', command);
     const targetUid = command.uid;
     const action = command.action; 
+    console.log('Received command:', targetUid);
+    console.log('Received command:', action);
 
 
     const targetSocket = clients[targetUid];
