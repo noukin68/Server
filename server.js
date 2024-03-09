@@ -924,35 +924,6 @@ io.on('connection', (socket) => {
 
   socket.emit('uid', uid);
 
-  socket.on('time-received', (timeInSeconds) => {
-    console.log('Received time:', timeInSeconds);
-    targetSocket.emit('time-received', timeInSeconds);
-  });
-  socket.on('stop-timer', (totalSeconds) => {
-    console.log(`Таймер был остановлен со значением: ${totalSeconds} секунд`);
-    targetSocket.emit('stop-timer', totalSeconds);
-  });
-  socket.on('timer-finished', () => {
-    console.log('Timer finished');
-    targetSocket.emit('timer-finished');
-  });
-  socket.on('continue-work', () => {
-    targetSocket.emit('continue-work');
-  });
-  socket.on('finish-work', () => {
-    targetSocket.emit('finish-work');
-  });
-  socket.on('process-data', (data) => {
-    targetSocket.emit('process-data', data);
-  });
-
-  socket.on('subject-and-class', (data) => {
-    const { subject, grade } = data;
-    console.log('Received Subject: ' + subject);
-    console.log('Received Class: ' + grade);
-    targetSocket.emit('selected-subject-and-class', { subject, grade });
-  });
-
   socket.on('command', (command) => {
     const targetUid = command.targetUid;
     const action = command.action; 
