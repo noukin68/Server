@@ -922,55 +922,50 @@ io.on('connection', (socket) => {
   socket.uid = uid;
   clients[uid] = socket;
 
+  const targetUid = uid;
+  const action = action;
+
   socket.emit('uid', uid);
 
   socket.on('time-received', (timeInSeconds) => {
     console.log('Received time:', timeInSeconds);
-    io.emit('time-received', timeInSeconds);
+    targetSocket.emit('time-received', timeInSeconds);
   });
   socket.on('stop-timer', (totalSeconds) => {
     console.log(`Таймер был остановлен со значением: ${totalSeconds} секунд`);
-    io.emit('stop-timer', totalSeconds);
+    targetSocket.emit('stop-timer', totalSeconds);
   });
   socket.on('timer-finished', () => {
     console.log('Timer finished');
-    io.emit('timer-finished');
+    targetSocket.emit('timer-finished');
   });
   socket.on('continue-work', () => {
-    io.emit('continue-work');
+    targetSocket.emit('continue-work');
   });
   socket.on('finish-work', () => {
-    io.emit('finish-work');
+    targetSocket.emit('finish-work');
   });
   socket.on('process-data', (data) => {
-    io.emit('process-data', data);
+    targetSocket.emit('process-data', data);
   });
 
   socket.on('subject-and-class', (data) => {
     const { subject, grade } = data;
     console.log('Received Subject: ' + subject);
     console.log('Received Class: ' + grade);
-    socket.emit('selected-subject-and-class', { subject, grade });
+    targetSocket.emit('selected-subject-and-class', { subject, grade });
     });
 
   socket.on('command', (command) => {
-    const targetUid = command.uid;
-    const action = command.action;
+    command.uid;
+    command.action;
 
     const targetSocket = clients[targetUid];
     if (!targetSocket) {
         socket.emit('error', 'UID not found');
         return;
     }
-
-    if (action === 'startTest') {
       targetSocket.emit('action', action);
-    } else if (action === 'closeApp') {
-      
-      targetSocket.emit('action', action);
-    } else {
-      // Обработка других команд
-    }
 });
 
 socket.on('check_uid', (uid) => {
