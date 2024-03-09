@@ -1039,6 +1039,7 @@ res.status(404).send('Данные не найдены');
 io.on('connection', (socket) => {
   let clientType = 'Unknown';
   let isDeviceConnected = false;
+
   socket.on('client-type', (clientType, uid) => {
     socket.clientType = clientType;
     socket.uid = uid;
@@ -1050,36 +1051,48 @@ io.on('connection', (socket) => {
     console.log(`Подключено ${clientType} устройство с UID ${uid}`);
   });
 
+  socket.on('wpf-connected', () => {
+    console.log('WPF приложение подключено');
+    io.emit('wpf-connection-status', { connected: true });
+  });
+
+  socket.on('wpf-disconnected', () => {
+    console.log('WPF приложение отключено');
+    io.emit('wpf-connection-status', { connected: false });
+  });
+
   socket.on('wpf-connection-status', (isConnected) => {
     console.log(`WPF приложение ${isConnected ? 'подключено' : 'отключено'}`);
     io.emit('wpf-connection-status', { connected: isConnected });
   });
 
-  socket.on('wpf-disconnected', () => {
-    io.emit('connection-status', { connected: false });
-  });
   socket.on('time-received', (timeInSeconds) => {
     console.log('Received time:', timeInSeconds);
     io.emit('time-received', timeInSeconds);
   });
-  // Обработчик для события "stop-timer"
+
   socket.on('stop-timer', (totalSeconds) => {
     console.log(`Таймер был остановлен со значением: ${totalSeconds} секунд`);
     io.emit('stop-timer', totalSeconds);
   });
+
   socket.on('timer-finished', () => {
     console.log('Timer finished');
     io.emit('timer-finished');
   });
+
   socket.on('continue-work', () => {
     io.emit('continue-work');
   });
+
   socket.on('finish-work', () => {
     io.emit('finish-work');
   });
+
   socket.on('process-data', (data) => {
     io.emit('process-data', data);
   });
+
   socket.on('disconnect', () => {
     const { clientType, uid } = socket;
     if (clientType && uid) {
@@ -1089,12 +1102,13 @@ io.on('connection', (socket) => {
     }
     io.emit('connection-status', { uid, connected: false });
   });
+
   socket.on('subject-and-class', (data) => {
     const { subject, grade } = data;
     console.log('Received Subject: ' + subject);
     console.log('Received Class: ' + grade);
     socket.emit('selected-subject-and-class', { subject, grade });
-    });
+  });
 });
 
 server.listen(port, () => {
