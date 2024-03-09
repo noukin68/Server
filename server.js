@@ -925,12 +925,9 @@ io.on('connection', (socket) => {
   socket.emit('uid', uid);
 
   socket.on('command', (command) => {
-    console.log('Received command:', command);
     const targetUid = command.uid;
     const action = command.action; 
-    console.log('Received command:', targetUid);
-    console.log('Received command:', action);
-
+    
 
     const targetSocket = clients[targetUid];
     
