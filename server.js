@@ -1050,6 +1050,11 @@ io.on('connection', (socket) => {
     console.log(`Подключено ${clientType} устройство с UID ${uid}`);
   });
 
+  socket.on('wpf-connection-status', (isConnected) => {
+    console.log(`WPF приложение ${isConnected ? 'подключено' : 'отключено'}`);
+    io.emit('wpf-connection-status', { connected: isConnected });
+  });
+
   socket.on('wpf-disconnected', () => {
     io.emit('connection-status', { connected: false });
   });
