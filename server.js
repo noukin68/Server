@@ -10,17 +10,6 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const fs = require('fs');
-
-// Перенаправляем stdout и stderr в файл журнала
-const logStream = fs.createWriteStream('server.log', { flags: 'a' });
-console.log = function(message) {
-  logStream.write(message + '\n');
-  process.stdout.write(message + '\n');
-};
-console.error = console.log; // Если вы также хотите перенаправить stderr
-
-
 const port = 3000;
 
 const db = mysql.createPool({
