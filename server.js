@@ -971,17 +971,27 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // Обработка команды 'timer-finished'
+    if (action === 'timer-finished') {
+      console.log('Timer finished');
+      targetSocket.emit('timer-finished');
+      return;
+    }
+
+    // Обработка команды 'continue-work'
+    if (action === 'continue-work') {
+      targetSocket.emit('continue-work');
+      return;
+    }
+
+    // Обработка команды 'finish-work'
+    if (action === 'finish-work') {
+      targetSocket.emit('finish-work');
+      return;
+    }
+
     if (action === 'process-data') {
-      const processData = data;
-      console.log('Received process data:', processData);
-
-      const targetSocket = clients[targetUid];
-      if (!targetSocket) {
-          socket.emit('error', 'UID not found');
-          return;
-      }
-
-      targetSocket.emit('process-data', processData);
+      targetSocket.emit('process-data');
       return;
     }
 
