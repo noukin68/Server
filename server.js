@@ -938,6 +938,30 @@ io.on('connection', (socket) => {
     }
 
     switch (action) {
+        case 'time-received':
+            const timeInSeconds = command.data;
+            console.log('Received time:', timeInSeconds);
+            targetSocket.emit('time-received', timeInSeconds);
+            break;
+        case 'stop-timer':
+            const totalSeconds = command.data;
+            console.log(`Таймер был остановлен со значением: ${totalSeconds} секунд`);
+            targetSocket.emit('stop-timer', totalSeconds);
+            break;
+        case 'timer-finished':
+            console.log('Timer finished');
+            targetSocket.emit('timer-finished');
+            break;
+        case 'continue-work':
+            targetSocket.emit('continue-work');
+            break;
+        case 'finish-work':
+            targetSocket.emit('finish-work');
+            break;
+        case 'process-data':
+            const data = command.data;
+            targetSocket.emit('process-data', data);
+            break;
         case 'subject-and-class':
               const subject = command.data.subject;
               const grade = command.data.grade;
@@ -977,30 +1001,6 @@ app.get('/restartTimer', (req, res) => {
   io.emit('restart-timer', {
   });
   res.send('Уведомление отправлено');
-});
-
-let receivedData = null;
-
-app.post('/receive-data', (req, res) => {
-  const { action, data } = req.body;
-
-  if (action === 'subject-and-class' && data) {
-    console.log('Получены данные о предмете и классе от клиента:');
-    console.log('Предмет:', data.subject);
-    console.log('Класс:', data.grade);
-    // Ваши дальнейшие действия с полученными данными
-    res.sendStatus(200); // Отправляем статус успеха клиенту
-  } else {
-    res.status(400).send('Неподдерживаемое действие или отсутствуют данные'); // Если действие не поддерживается или отсутствуют данные, возвращаем ошибку
-  }
-});
-
-app.get('/get-data', (req, res) => {
-if (receivedData) {
-res.json(receivedData);
-} else {
-res.status(404).send('Данные не найдены');
-}
 });
 
 server.listen(port, () => {
