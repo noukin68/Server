@@ -991,7 +991,9 @@ io.on('connection', (socket) => {
     }
 
     if (action === 'process-data') {
-      targetSocket.emit('process-data');
+      const processData = data;
+      console.log('Received process data:', processData);
+      targetSocket.emit('process-data', processData);
       return;
     }
 
