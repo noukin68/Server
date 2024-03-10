@@ -931,16 +931,28 @@ io.on('connection', (socket) => {
     // Обработка команды 'subject-and-class'
     if (action === 'subject-and-class') {
         const { subject, grade } = command.data; // Извлечение данных о предмете и классе из объекта data
-        console.log('Received Subject: ' + command.data.subject);
-        console.log('Received Class: ' + command.data.timeInSeconds.grade);
+        console.log('Received Subject: ' + subject);
+        console.log('Received Class: ' + grade);
+
+        const targetSocket = clients[targetUid];
+        if (!targetSocket) {
+            socket.emit('error', 'UID not found');
+            return;
+        }
 
         targetSocket.emit('selected-subject-and-class', { subject, grade }); // Отправка данных конкретному клиенту
         return;
     }
 
     if (action === 'time-received') {
-      const timeInSeconds = command.data.timeInSeconds;;
+      const timeInSeconds = command.data;
       console.log('Received time:', timeInSeconds);
+
+      const targetSocket = clients[targetUid];
+      if (!targetSocket) {
+          socket.emit('error', 'UID not found');
+          return;
+      }
 
       targetSocket.emit('time-received', timeInSeconds); // Отправка времени всем подключенным клиентам
       return;
@@ -953,13 +965,12 @@ io.on('connection', (socket) => {
     }
 
     targetSocket.emit('action', action);
-});
+  });
 
-
-socket.on('check_uid', (uid) => {
+  socket.on('check_uid', (uid) => {
     const exists = clients[uid] !== undefined;
     socket.emit('uid_check_result', { uid, exists });
-});
+  });
 
   socket.on('disconnect', () => {
     console.log('Клиент отключен');
