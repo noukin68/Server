@@ -930,6 +930,7 @@ io.on('connection', (socket) => {
 
     // Обработка команды 'subject-and-class'
     if (action === 'subject-and-class') {
+        const targetUid = command.uid;
         const { subject, grade } = command.data; // Извлечение данных о предмете и классе из объекта data
         console.log('Received Subject: ' + subject);
         console.log('Received Class: ' + grade);
@@ -945,6 +946,7 @@ io.on('connection', (socket) => {
     }
 
     if (action === 'time-received') {
+      const targetUid = command.uid;
       const timeInSeconds = command.data;
       console.log('Received time:', timeInSeconds);
 
