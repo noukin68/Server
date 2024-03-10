@@ -927,8 +927,6 @@ io.on('connection', (socket) => {
   socket.on('command', (command) => {
     const targetUid = command.uid;
     const action = command.action; 
-    const data = command.data;
-    
 
     const targetSocket = clients[targetUid];
     
@@ -937,46 +935,23 @@ io.on('connection', (socket) => {
         return;
     }
 
-    switch (action) {
-        case 'time-received':
-            const timeInSeconds = command.data;
-            console.log('Received time:', timeInSeconds);
-            targetSocket.emit('time-received', timeInSeconds);
-            break;
-        case 'stop-timer':
-            const totalSeconds = command.data;
-            console.log(`Таймер был остановлен со значением: ${totalSeconds} секунд`);
-            targetSocket.emit('stop-timer', totalSeconds);
-            break;
-        case 'timer-finished':
-            console.log('Timer finished');
-            targetSocket.emit('timer-finished');
-            break;
-        case 'continue-work':
-            targetSocket.emit('continue-work');
-            break;
-        case 'finish-work':
-            targetSocket.emit('finish-work');
-            break;
-        case 'process-data':
-            const data = command.data;
-            targetSocket.emit('process-data', data);
-            break;
-        case 'subject-and-class':
-              const subject = command.data.subject;
-              const grade = command.data.grade;
-              console.log('Received Subject: ' + subject);
-              console.log('Received Class: ' + grade);
-              targetSocket.emit('selected-subject-and-class', { subject, grade });
-              break;          
-        default:
-            break;
-    }
+    targetSocket.emit('action', action); 
+  }); 
+  
+  socket.on('subject-and-class', (data) => {
+  const { subject, grade, uid } = data; 
+  console.log('Received Subject: ' + subject);
+  console.log('Received Class: ' + grade);
 
-    targetSocket.emit('action', action);
-    targetSocket.emit('data', data);
+  // Найти целевой сокет по uid
+  const targetSocket = clients[uid];
+  if (!targetSocket) {
+      socket.emit('error', 'UID not found');
+      return;
+  }
 
-    
+  // Переслать данные о предмете и классе целевому сокету
+  targetSocket.emit('selected-subject-and-class', { subject, grade });
 });
 
 socket.on('check_uid', (uid) => {
