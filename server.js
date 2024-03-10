@@ -926,33 +926,33 @@ io.on('connection', (socket) => {
 
   socket.on('command', (command) => {
     const targetUid = command.uid;
-    const action = command.action; 
+    const action = command.action;
+
+    // Обработка команды 'subject-and-class'
+    if (action === 'subject-and-class') {
+        const { subject, grade } = command.data; // Извлечение данных о предмете и классе из объекта data
+        console.log('Received Subject: ' + subject);
+        console.log('Received Class: ' + grade);
+        
+        const targetSocket = clients[targetUid];
+        if (!targetSocket) {
+            socket.emit('error', 'Target UID not found');
+            return;
+        }
+
+        targetSocket.emit('selected-subject-and-class', { subject, grade }); // Отправка данных конкретному клиенту
+        return;
+    }
 
     const targetSocket = clients[targetUid];
-    
     if (!targetSocket) {
         socket.emit('error', 'UID not found');
         return;
     }
 
-    targetSocket.emit('action', action); 
-  }); 
-  
-  socket.on('subject-and-class', (data) => {
-  const { subject, grade, uid } = data; 
-  console.log('Received Subject: ' + subject);
-  console.log('Received Class: ' + grade);
-
-  // Найти целевой сокет по uid
-  const targetSocket = clients[uid];
-  if (!targetSocket) {
-      socket.emit('error', 'UID not found');
-      return;
-  }
-
-  // Переслать данные о предмете и классе целевому сокету
-  targetSocket.emit('selected-subject-and-class', { subject, grade });
+    targetSocket.emit('action', action);
 });
+
 
 socket.on('check_uid', (uid) => {
     const exists = clients[uid] !== undefined;
