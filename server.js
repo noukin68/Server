@@ -1030,6 +1030,30 @@ app.get('/restartTimer', (req, res) => {
   res.send('Уведомление отправлено');
 });
 
+let receivedData = null;
+
+app.post('/receive-data', (req, res) => {
+  const { action, data } = req.body;
+
+  if (action === 'subject-and-class' && data) {
+    console.log('Получены данные о предмете и классе от клиента:');
+    console.log('Предмет:', data.subject);
+    console.log('Класс:', data.grade);
+    // Ваши дальнейшие действия с полученными данными
+    res.sendStatus(200); // Отправляем статус успеха клиенту
+  } else {
+    res.status(400).send('Неподдерживаемое действие или отсутствуют данные'); // Если действие не поддерживается или отсутствуют данные, возвращаем ошибку
+  }
+});
+
+app.get('/get-data', (req, res) => {
+if (receivedData) {
+res.json(receivedData);
+} else {
+res.status(404).send('Данные не найдены');
+}
+});
+
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
