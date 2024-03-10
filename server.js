@@ -927,7 +927,7 @@ io.on('connection', (socket) => {
   socket.on('command', (command) => {
     const targetUid = command.uid;
     const action = command.action; 
-    const con = command.data;
+    const data = command.data;
     
 
     const targetSocket = clients[targetUid];
@@ -938,31 +938,7 @@ io.on('connection', (socket) => {
     }
 
     switch (action) {
-        case 'time-received':
-            const timeInSeconds = con;
-            console.log('Received time:', timeInSeconds);
-            targetSocket.emit('time-received', timeInSeconds);
-            break;
-        case 'stop-timer':
-            const totalSeconds = command.data;
-            console.log(`Таймер был остановлен со значением: ${totalSeconds} секунд`);
-            targetSocket.emit('stop-timer', totalSeconds);
-            break;
-        case 'timer-finished':
-            console.log('Timer finished');
-            targetSocket.emit('timer-finished');
-            break;
-        case 'continue-work':
-            targetSocket.emit('continue-work');
-            break;
-        case 'finish-work':
-            targetSocket.emit('finish-work');
-            break;
-        case 'process-data':
-            const data = command.data;
-            targetSocket.emit('process-data', data);
-            break;
-            case 'subject-and-class':
+        case 'subject-and-class':
               const subject = command.data.subject;
               const grade = command.data.grade;
               console.log('Received Subject: ' + subject);
@@ -972,6 +948,10 @@ io.on('connection', (socket) => {
         default:
             break;
     }
+
+    targetSocket.emit('action', action);
+    targetSocket.emit('data', data);
+
     
 });
 
