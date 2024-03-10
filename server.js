@@ -916,8 +916,6 @@ const clients = {};
 
 io.on('connection', (socket) => {
   console.log('Новый клиент подключен');
-  console.log('Received Subject: ' + subject);
-  console.log('Received Class: ' + grade);
 
   const uid = Date.now().toString();
 
