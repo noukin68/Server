@@ -931,15 +931,15 @@ io.on('connection', (socket) => {
     // Обработка команды 'subject-and-class'
     if (action === 'subject-and-class') {
         const { subject, grade } = command.data; // Извлечение данных о предмете и классе из объекта data
-        console.log('Received Subject: ' + subject);
-        console.log('Received Class: ' + grade);
+        console.log('Received Subject: ' + command.data.subject);
+        console.log('Received Class: ' + command.data.timeInSeconds.grade);
 
         targetSocket.emit('selected-subject-and-class', { subject, grade }); // Отправка данных конкретному клиенту
         return;
     }
 
     if (action === 'time-received') {
-      const timeInSeconds = command.data;
+      const timeInSeconds = command.data.timeInSeconds;;
       console.log('Received time:', timeInSeconds);
 
       targetSocket.emit('time-received', timeInSeconds); // Отправка времени всем подключенным клиентам
