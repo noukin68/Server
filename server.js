@@ -1030,14 +1030,6 @@ app.get('/restartTimer', (req, res) => {
   res.send('Уведомление отправлено');
 });
 
-app.get('/get-data', (req, res) => {
-if (data) {
-res.json(data);
-} else {
-res.status(404).send('Данные не найдены');
-}
-});
-
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
