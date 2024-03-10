@@ -944,6 +944,20 @@ io.on('connection', (socket) => {
         return;
     }
 
+    if (action === 'time-received') {
+      const timeInSeconds = command.data;
+      console.log('Received time:', timeInSeconds);
+
+      const targetSocket = clients[targetUid];
+        if (!targetSocket) {
+            socket.emit('error', 'Target UID not found');
+            return;
+        }
+        
+      targetSocket.emit('time-received', timeInSeconds); // Отправка времени всем подключенным клиентам
+      return;
+    }
+
     const targetSocket = clients[targetUid];
     if (!targetSocket) {
         socket.emit('error', 'UID not found');
