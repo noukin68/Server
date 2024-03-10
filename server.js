@@ -925,9 +925,26 @@ io.on('connection', (socket) => {
   socket.emit('uid', uid);
 
   socket.on('command', (command) => {
-    const { uid: targetUid, action, data } = command;
+    const targetUid = command.uid;
+    const action = command.action;
+    const targetSocket = clients[targetUid];
+    if (!targetSocket) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+    targetSocket.emit('action', action);
+  });
 
-    // Обработка команды 'subject-and-class'
+  socket.on('time-received', (data) => {
+    const { uid, timeInSeconds } = data;
+    const targetSocket = clients[uid];
+    if (!targetSocket) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+    targetSocket.emit('time-received', timeInSeconds);
+  });
+
     if (action === 'subject-and-class') {
       const { subject, grade } = data;
       console.log('Received Subject: ' + subject);
@@ -940,20 +957,6 @@ io.on('connection', (socket) => {
       }
 
       targetSocket.emit('selected-subject-and-class', { subject, grade });
-      return;
-    }
-
-    if (action === 'time-received') {
-      const { timeInSeconds } = req.body.timeInSeconds;
-      console.log('Received time:', timeInSeconds);
-
-      const targetSocket = clients[targetUid];
-      if (!targetSocket) {
-          socket.emit('error', 'UID not found');
-          return;
-      }
-
-      targetSocket.emit('time-received', timeInSeconds);
       return;
     }
 
@@ -1015,7 +1018,7 @@ io.on('connection', (socket) => {
     console.log('Клиент отключен');
     delete clients[socket.uid];
   });
-});
+
 
 app.get('/notify', (req, res) => {
   io.emit('test-completed', {
