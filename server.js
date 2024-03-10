@@ -944,7 +944,7 @@ io.on('connection', (socket) => {
     }
 
     if (action === 'time-received') {
-      const { timeInSeconds } = data;
+      const { timeInSeconds } = req.body.timeInSeconds;
       console.log('Received time:', timeInSeconds);
 
       const targetSocket = clients[targetUid];
