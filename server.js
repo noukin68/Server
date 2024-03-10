@@ -925,29 +925,26 @@ io.on('connection', (socket) => {
   socket.emit('uid', uid);
 
   socket.on('command', (command) => {
-    const targetUid = command.uid;
-    const action = command.action;
+    const { uid: targetUid, action, data } = command;
 
     // Обработка команды 'subject-and-class'
     if (action === 'subject-and-class') {
-        const targetUid = command.uid;
-        const { subject, grade } = command.data; // Извлечение данных о предмете и классе из объекта data
-        console.log('Received Subject: ' + subject);
-        console.log('Received Class: ' + grade);
+      const { subject, grade } = data;
+      console.log('Received Subject: ' + subject);
+      console.log('Received Class: ' + grade);
 
-        const targetSocket = clients[targetUid];
-        if (!targetSocket) {
-            socket.emit('error', 'UID not found');
-            return;
-        }
+      const targetSocket = clients[targetUid];
+      if (!targetSocket) {
+          socket.emit('error', 'UID not found');
+          return;
+      }
 
-        targetSocket.emit('selected-subject-and-class', { subject, grade }); // Отправка данных конкретному клиенту
-        return;
+      targetSocket.emit('selected-subject-and-class', { subject, grade });
+      return;
     }
 
     if (action === 'time-received') {
-      const targetUid = command.uid;
-      const timeInSeconds = command.data;
+      const { timeInSeconds } = data;
       console.log('Received time:', timeInSeconds);
 
       const targetSocket = clients[targetUid];
@@ -956,7 +953,7 @@ io.on('connection', (socket) => {
           return;
       }
 
-      targetSocket.emit('time-received', timeInSeconds); // Отправка времени всем подключенным клиентам
+      targetSocket.emit('time-received', timeInSeconds);
       return;
     }
 
