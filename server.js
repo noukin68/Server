@@ -942,10 +942,14 @@ io.on('connection', (socket) => {
       socket.emit('error', 'UID not found');
       return;
     }
-    if (socket.uid !== targetUid) {
-      targetSocket.emit('time-get', { uid: targetUid, timeInSeconds });
+    if (targetSocket.connected) { // Проверяем, подключен ли сокет
+        targetSocket.emit('time-received', { uid: targetUid, timeInSeconds });
+    } else {
+        console.log(`Socket for UID ${targetUid} is not connected.`);
+        // Можно выполнить дополнительные действия, например, удалить сокет из списка клиентов
     }
   });
+
 
 
   socket.on('stop-timer', (data) => {
