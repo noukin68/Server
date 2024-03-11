@@ -935,14 +935,13 @@ io.on('connection', (socket) => {
     targetSocket.emit('action', action);
   });
 
-  socket.on('time-received', (data) => {
-    const { uid, timeInSeconds } = data;
+  socket.on('time-received', ({ uid, timeInSeconds }) => {
     const targetSocket = clients[uid];
     if (!targetSocket) {
       socket.emit('error', 'UID not found');
       return;
     }
-    targetSocket.emit('time-received', timeInSeconds, uid);
+    targetSocket.emit('time-received', uid, timeInSeconds);
   });
 
   socket.on('stop-timer', (data) => {
