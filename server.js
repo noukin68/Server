@@ -945,68 +945,59 @@ io.on('connection', (socket) => {
     targetSocket.emit('time-received', timeInSeconds);
   });
 
-    if (action === 'subject-and-class') {
-      const { subject, grade } = data;
-      console.log('Received Subject: ' + subject);
-      console.log('Received Class: ' + grade);
-
-      const targetSocket = clients[targetUid];
-      if (!targetSocket) {
-          socket.emit('error', 'UID not found');
-          return;
-      }
-
-      targetSocket.emit('selected-subject-and-class', { subject, grade });
-      return;
-    }
-
-    if (action === 'stop-timer') {
-      const totalSeconds = data;
-      console.log(`Таймер был остановлен со значением: ${totalSeconds} секунд`);
-
-      const targetSocket = clients[targetUid];
-      if (!targetSocket) {
-          socket.emit('error', 'UID not found');
-          return;
-      }
-
-      targetSocket.emit('stop-timer', totalSeconds);
-      return;
-    }
-
-    // Обработка команды 'timer-finished'
-    if (action === 'timer-finished') {
-      console.log('Timer finished');
-      targetSocket.emit('timer-finished');
-      return;
-    }
-
-    // Обработка команды 'continue-work'
-    if (action === 'continue-work') {
-      targetSocket.emit('continue-work');
-      return;
-    }
-
-    // Обработка команды 'finish-work'
-    if (action === 'finish-work') {
-      targetSocket.emit('finish-work');
-      return;
-    }
-
-    if (action === 'process-data') {
-      const processData = data;
-      console.log('Received process data:', processData);
-      targetSocket.emit('process-data', processData);
-      return;
-    }
-
-    const targetSocket = clients[targetUid];
+  socket.on('stop-timer', (data) => {
+    const { uid, totalSeconds } = data;
+    const targetSocket = clients[uid];
     if (!targetSocket) {
-        socket.emit('error', 'UID not found');
-        return;
+      socket.emit('error', 'UID not found');
+      return;
     }
+    targetSocket.emit('stop-timer', totalSeconds);
+  });
 
-    targetSocket.emit('action', action);
+  socket.on('continue-work', (data) => {
+    const { uid } = data;
+    const targetSocket = clients[uid];
+    if (!targetSocket) {
+      socket.emit('error', 'UID not found');
+      return;
+    } 
+    targetSocket.emit('continue-work');
+  });
+
+  socket.on('finish-work', (data) => {
+    const { uid } = data; 
+    const targetSocket = clients[uid];
+    if (!targetSocket) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+    targetSocket.emit('finish-work');
+  });
+
+  socket.on('subject-and-class', (data) => {
+    const { subject, grade, uid } = data;
+    const targetSocket = clients[uid];
+    if (!targetSocket) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+    console.log('Received Subject: ' + subject);
+    console.log('Received Class: ' + grade);
+    targetSocket.emit('selected-subject-and-class', { subject, grade});
+    });
+
+  socket.on('timer-finished', () => {
+    console.log('Timer finished');
+    io.emit('timer-finished');
+  });
+
+  socket.on('process-data', (data) => {
+    io.emit('process-data', data);
+  });
+  
+  socket.on('wpf-disconnected', () => {
+    io.emit('connection-status', { connected: false });
   });
 
   socket.on('check_uid', (uid) => {
@@ -1018,7 +1009,7 @@ io.on('connection', (socket) => {
     console.log('Клиент отключен');
     delete clients[socket.uid];
   });
-
+});
 
 app.get('/notify', (req, res) => {
   io.emit('test-completed', {
@@ -1031,6 +1022,25 @@ app.get('/restartTimer', (req, res) => {
   io.emit('restart-timer', {
   });
   res.send('Уведомление отправлено');
+});
+
+let receivedData = null;
+
+app.post('/receive-data', (req, res) => {
+const data = req.body;
+console.log('Получены данные от клиента:');
+console.log('Предмет:', data.subject);
+console.log('Класс:', data.grade);
+receivedData = data;
+res.sendStatus(200);
+});
+
+app.get('/get-data', (req, res) => {
+if (receivedData) {
+res.json(receivedData);
+} else {
+res.status(404).send('Данные не найдены');
+}
 });
 
 server.listen(port, () => {
