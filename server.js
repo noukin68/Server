@@ -941,7 +941,9 @@ io.on('connection', (socket) => {
       socket.emit('error', 'UID not found');
       return;
     }
-    targetSocket.emit('time-received', {uid, timeInSeconds});
+    if (socket.uid !== targetUid) {
+      targetSocket.emit('time-received', { uid: targetUid, timeInSeconds });
+    }
   });
 
   socket.on('stop-timer', (data) => {
