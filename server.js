@@ -938,15 +938,19 @@ io.on('connection', (socket) => {
   socket.join(uid);
 
   socket.on('time-received', ({ uid: targetUid, timeInSeconds }) => {
+    if (socket.uid === targetUid) {
+      console.log('Событие time-received вызывается на том же сокете, который его инициировал');
+      return;
+    }
+
     const targetSocket = clients[targetUid];
     if (!targetSocket) {
       socket.emit('error', 'UID not found');
       return;
     }
+
     io.to(targetUid).emit('time-received', { uid: targetUid, timeInSeconds });
   });
-
-
 
   socket.on('stop-timer', (data) => {
     const { uid, totalSeconds } = data;
