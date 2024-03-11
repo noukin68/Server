@@ -942,7 +942,7 @@ io.on('connection', (socket) => {
       socket.emit('error', 'UID not found');
       return;
     }
-    targetSocket.emit('time-received', timeInSeconds, uid);
+    targetSocket.emit('time-received', timeInSeconds);
   });
 
   socket.on('stop-timer', (data) => {
@@ -952,7 +952,7 @@ io.on('connection', (socket) => {
       socket.emit('error', 'UID not found');
       return;
     }
-    targetSocket.emit('stop-timer', totalSeconds, uid);
+    targetSocket.emit('stop-timer', totalSeconds);
   });
 
   socket.on('continue-work', (data) => {
@@ -962,7 +962,7 @@ io.on('connection', (socket) => {
       socket.emit('error', 'UID not found');
       return;
     } 
-    targetSocket.emit('continue-work', uid);
+    targetSocket.emit('continue-work');
   });
 
   socket.on('finish-work', (data) => {
@@ -972,7 +972,7 @@ io.on('connection', (socket) => {
       socket.emit('error', 'UID not found');
       return;
     }
-    targetSocket.emit('finish-work', uid);
+    targetSocket.emit('finish-work');
   });
 
   socket.on('subject-and-class', (data) => {
@@ -984,7 +984,7 @@ io.on('connection', (socket) => {
     }
     console.log('Received Subject: ' + subject);
     console.log('Received Class: ' + grade);
-    targetSocket.emit('selected-subject-and-class', { subject, grade}, uid);
+    targetSocket.emit('selected-subject-and-class', { subject, grade});
   });
 
   socket.on('timer-finished', () => {
