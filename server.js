@@ -919,16 +919,38 @@ io.on('connection', (socket) => {
 
   const uid = Date.now().toString();
 
-  socket.on('uid', (uid) => {
-    socket.uid = uid;
-    clients[uid] = socket;
-    socket.join(uid); 
+  socket.uid = uid;
+  socket.join(uid);
+
+  socket.emit('uid', uid);
+
+  socket.on('command', (command) => {
+    const targetUid = command.uid;
+    const action = command.action;
+
+
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+
+
+    io.to(targetUid).emit('action', action);
   });
 
   socket.on('time-received', ({ uid: targetUid, timeInSeconds }) => {
-    io.to(targetUid).emit('time-received', { uid: targetUid, timeInSeconds });
-  });
 
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+
+
+    if (socket.uid !== targetUid) {
+
+      io.to(targetUid).emit('time-received', { uid: targetUid, timeInSeconds });
+    }
+  });
 
   socket.on('stop-timer', (data) => {
     const { uid, totalSeconds } = data;
