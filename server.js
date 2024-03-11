@@ -941,8 +941,7 @@ io.on('connection', (socket) => {
       socket.emit('error', 'UID not found');
       return;
     }
-    const timeData = { uid, timeInSeconds };
-    targetSocket.emit('time-received', timeData);
+    targetSocket.emit('time-received', uid, timeInSeconds);
   });
 
   socket.on('stop-timer', (data) => {
