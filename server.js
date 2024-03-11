@@ -936,13 +936,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('time-received', ({ uid: targetUid, timeInSeconds }) => {
+    console.log(`Received time from UID: ${targetUid}, time: ${timeInSeconds}`);
     const targetSocket = clients[targetUid];
     if (!targetSocket) {
       socket.emit('error', 'UID not found');
       return;
     }
     if (socket.uid !== targetUid) {
-      targetSocket.emit('time-received', { uid: targetUid, timeInSeconds });
+      targetSocket.emit('time-get', { uid: targetUid, timeInSeconds });
     }
   });
 
