@@ -935,19 +935,15 @@ io.on('connection', (socket) => {
     targetSocket.emit('action', action);
   });
 
+  socket.join(uid);
+
   socket.on('time-received', ({ uid: targetUid, timeInSeconds }) => {
-    console.log(`Received time from UID: ${targetUid}, time: ${timeInSeconds}`);
     const targetSocket = clients[targetUid];
     if (!targetSocket) {
       socket.emit('error', 'UID not found');
       return;
     }
-    if (targetSocket.connected) { // Проверяем, подключен ли сокет
-        targetSocket.emit('time-received', { uid: targetUid, timeInSeconds });
-    } else {
-        console.log(`Socket for UID ${targetUid} is not connected.`);
-        // Можно выполнить дополнительные действия, например, удалить сокет из списка клиентов
-    }
+    io.to(targetUid).emit('time-received', { uid: targetUid, timeInSeconds });
   });
 
 
