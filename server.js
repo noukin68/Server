@@ -925,17 +925,6 @@ io.on('connection', (socket) => {
     socket.join(uid); 
   });
 
-  socket.on('command', (command) => {
-    const targetUid = command.uid;
-    const action = command.action;
-    const targetSocket = clients[targetUid];
-    if (!targetSocket) {
-      socket.emit('error', 'UID not found');
-      return;
-    }
-    targetSocket.emit('action', action);
-  });
-
   socket.on('time-received', ({ uid: targetUid, timeInSeconds }) => {
     const targetSocket = clients[targetUid];
     if (!targetSocket) {
