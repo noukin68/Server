@@ -1,13 +1,13 @@
 const express = require('express');
 const mysql = require('mysql');
 const cors = require('cors');
-const https = require('https');
+const http = require('http');
 const socketIo = require('socket.io');
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
-const server = https.createServer(app);
+const server = http.createServer(app);
 const io = socketIo(server);
 
 const port = 3000;
