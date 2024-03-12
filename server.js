@@ -1012,15 +1012,6 @@ io.on('connection', (socket) => {
     socket.emit('uid_check_result', { uid, exists });
   });
 
-  app.post('/generate-key', (req, res) => {
-    const uid = req.body.uid;
-    // Генерируем случайный ключ
-    const key = uuidv4();
-    // Присваиваем ключ указанному uid
-    clients[uid].key = key;
-    res.json({ key: key });
-  });
-
   socket.on('disconnect', () => {
     console.log('Клиент отключен');
     delete clients[socket.uid];
