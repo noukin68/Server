@@ -991,6 +991,17 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('restart-timer', ({ uid: targetUid}) => {
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+    if (socket.uid !== targetUid) {
+
+      io.to(targetUid).emit('restart-timer', { uid: targetUid});
+    }
+  });
+
   socket.on('timer-finished', () => {
     console.log('Timer finished');
     io.emit('timer-finished');
@@ -1022,11 +1033,6 @@ app.get('/notify', (req, res) => {
   res.send('Уведомление отправлено');
 });
 
-app.get('/restartTimer', (req, res) => {
-  io.emit('restart-timer', {
-  });
-  res.send('Уведомление отправлено');
-});
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
