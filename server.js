@@ -991,17 +991,19 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('restart-timer', ({ uid: targetUid}) => {
+  socket.on('restart-timer', ({ uid: targetUid }) => {
+    // Проверяем, существует ли комната с указанным UID
     if (!io.sockets.adapter.rooms.has(targetUid)) {
-      socket.emit('error', 'UID not found');
-      return;
+        socket.emit('error', 'UID not found');
+        return;
     }
-    console.log('RestartTimer: ' + targetUid);
-    if (socket.uid !== targetUid) {
 
-      io.to(targetUid).emit('restart-timer', { uid: targetUid});
-    }
-  });
+    console.log('RestartTimer: ' + targetUid);
+
+    // Отправляем событие 'restart-timer' только конкретному клиенту с указанным UID
+    socket.emit('restart-timer', { uid: targetUid });
+});
+
 
   socket.on('timer-finished', () => {
     console.log('Timer finished');
