@@ -1002,7 +1002,7 @@ io.on('connection', (socket) => {
 
     // Отправляем событие 'restart-timer' только конкретному клиенту с указанным UID
     socket.emit('restart-timer', { uid: targetUid });
-});
+  });
 
 
   socket.on('timer-finished', () => {
