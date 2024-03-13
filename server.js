@@ -927,71 +927,68 @@ io.on('connection', (socket) => {
   socket.on('command', (command) => {
     const targetUid = command.uid;
     const action = command.action;
-
-
     if (!io.sockets.adapter.rooms.has(targetUid)) {
       socket.emit('error', 'UID not found');
       return;
     }
-
-
     io.to(targetUid).emit('action', action);
   });
 
   socket.on('time-received', ({ uid: targetUid, timeInSeconds }) => {
-
     if (!io.sockets.adapter.rooms.has(targetUid)) {
       socket.emit('error', 'UID not found');
       return;
     }
-
-
     if (socket.uid !== targetUid) {
 
       io.to(targetUid).emit('time-received', { uid: targetUid, timeInSeconds });
     }
   });
 
-  socket.on('stop-timer', (data) => {
-    const { uid, totalSeconds } = data;
-    const targetSocket = clients[uid];
-    if (!targetSocket) {
+  socket.on('stop-timer', ({ uid: targetUid, totalSeconds }) => {
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
       socket.emit('error', 'UID not found');
       return;
     }
-    targetSocket.emit('stop-timer', totalSeconds, uid);
+    if (socket.uid !== targetUid) {
+
+      io.to(targetUid).emit('stop-timer', { uid: targetUid, totalSeconds });
+    }
   });
 
-  socket.on('continue-work', (data) => {
-    const { uid } = data;
-    const targetSocket = clients[uid];
-    if (!targetSocket) {
-      socket.emit('error', 'UID not found');
-      return;
-    } 
-    targetSocket.emit('continue-work', uid);
-  });
-
-  socket.on('finish-work', (data) => {
-    const { uid } = data; 
-    const targetSocket = clients[uid];
-    if (!targetSocket) {
+  socket.on('continue-work', ({ uid: targetUid}) => {
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
       socket.emit('error', 'UID not found');
       return;
     }
-    targetSocket.emit('finish-work', uid);
+    if (socket.uid !== targetUid) {
+
+      io.to(targetUid).emit('continue-work', { uid: targetUid});
+    }
   });
 
-  socket.on('subject-and-class', (data) => {
-    const { subject, grade, uid } = data;
-    const targetSocket = clients[uid];
-    if (!targetSocket) {
+  socket.on('finish-work', ({ uid: targetUid}) => {
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+    if (socket.uid !== targetUid) {
+
+      io.to(targetUid).emit('finish-work', { uid: targetUid});
+    }
+  });
+
+  socket.on('subject-and-class', ({ uid: targetUid, subject, grade}) => {
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
       socket.emit('error', 'UID not found');
       return;
     }
     console.log('Received Subject: ' + subject);
     console.log('Received Class: ' + grade);
-    targetSocket.emit('selected-subject-and-class', { subject, grade}, uid);
+    if (socket.uid !== targetUid) {
+
+      io.to(targetUid).emit('selected-subject-and-class', { uid: targetUid, subject, grade});
+    }
   });
 
   socket.on('timer-finished', () => {
@@ -1029,25 +1026,6 @@ app.get('/restartTimer', (req, res) => {
   io.emit('restart-timer', {
   });
   res.send('Уведомление отправлено');
-});
-
-let receivedData = null;
-
-app.post('/receive-data', (req, res) => {
-const data = req.body;
-console.log('Получены данные от клиента:');
-console.log('Предмет:', data.subject);
-console.log('Класс:', data.grade);
-receivedData = data;
-res.sendStatus(200);
-});
-
-app.get('/get-data', (req, res) => {
-if (receivedData) {
-res.json(receivedData);
-} else {
-res.status(404).send('Данные не найдены');
-}
 });
 
 server.listen(port, () => {
