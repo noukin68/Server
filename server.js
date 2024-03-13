@@ -996,6 +996,7 @@ io.on('connection', (socket) => {
       socket.emit('error', 'UID not found');
       return;
     }
+    console.log('RestartTimer: ' + targetUid);
     if (socket.uid !== targetUid) {
 
       io.to(targetUid).emit('restart-timer', { uid: targetUid});
