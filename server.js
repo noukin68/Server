@@ -1000,10 +1000,8 @@ io.on('connection', (socket) => {
 
     console.log('RestartTimer: ' + targetUid);
 
-    if (socket.uid !== targetUid) {
-
-      io.to(targetUid).emit('timer-restarted', { uid: targetUid});
-    }
+    // Отправляем событие 'restart-timer' только конкретному клиенту с указанным UID
+    socket.emit('restart-timer', { uid: targetUid });
   });
 
 
