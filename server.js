@@ -991,25 +991,18 @@ io.on('connection', (socket) => {
     }
   });
 
-  app.get('/restart-timer', (req, res) => {
-    try {
-        const uid = req.query.uid;
+  socket.on('restart-timer', ({ uid: targetUid }) => {
+    // Проверяем, существует ли комната с указанным UID
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
+        socket.emit('error', 'UID not found');
+        return;
+    }
 
-        // Здесь вы можете выполнить необходимые действия при получении данных от клиента
-        // Например, можно отправить уведомление о перезапуске таймера через Socket.IO
+    console.log('RestartTimer: ' + targetUid);
 
-        console.log(`Received restart-timer request for UID: ${uid}`);
+    if (socket.uid !== targetUid) {
 
-        // Отправляем уведомление через Socket.IO
-        io.emit('restart-timer', {
-            uid: uid
-        });
-
-        // Отправляем ответ клиенту
-        res.status(200).send('Уведомление отправлено');
-    } catch (error) {
-        console.error('Error processing restart-timer request:', error);
-        res.status(500).send('Error processing restart-timer request');
+      io.to(targetUid).emit('restart-timer', { uid: targetUid });
     }
   });
 
