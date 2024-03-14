@@ -1002,7 +1002,7 @@ io.on('connection', (socket) => {
 
     if (socket.uid !== targetUid) {
 
-      io.in(targetUid).emit('restart-timer', { uid: targetUid });
+      io.to(targetUid).emit('restart-timer', { uid: targetUid });
     }
   });
 
