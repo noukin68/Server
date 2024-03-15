@@ -1013,12 +1013,16 @@ io.on('connection', (socket) => {
     }
   });
 
-
-  socket.on('process-data', (data) => {
-    io.emit('process-data', data);
-  });
+  socket.on('process-data', ({ uid: targetUid, processes }) => {
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+    if (socket.uid !== targetUid) {
+      io.to(targetUid).emit('process-data', { uid: targetUid, processes });
+    }
+  });  
   
-
   socket.on('timer-finished', () => {
     console.log('Timer finished');
     io.emit('timer-finished');
