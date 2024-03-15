@@ -936,15 +936,16 @@ io.on('connection', (socket) => {
 
   socket.on('time-received', ({ uid: targetUid, timeInSeconds }) => {
     if (!io.sockets.adapter.rooms.has(targetUid)) {
-      socket.emit('error', 'UID not found');
-      return;
+        socket.emit('error', 'UID not found');
+        return;
     }
     if (socket.uid !== targetUid) {
-
-      io.to(targetUid).emit('time-received', { uid: targetUid, timeInSeconds });
+        clients[targetUid] = { timeInSeconds }; // Сохраняем первоначальное время таймера
+        io.to(targetUid).emit('time-received', { uid: targetUid, timeInSeconds });
     }
   });
 
+  let timerStopped = false;
   socket.on('stop-timer', ({ uid: targetUid, totalSeconds }) => {
     if (!io.sockets.adapter.rooms.has(targetUid)) {
       socket.emit('error', 'UID not found');
@@ -954,6 +955,7 @@ io.on('connection', (socket) => {
 
       io.to(targetUid).emit('stop-timer', { uid: targetUid, totalSeconds });
     }
+    timerStopped = true;
   });
 
   socket.on('continue-work', ({ uid: targetUid}) => {
@@ -991,14 +993,14 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('restart-time', ({ uid: targetUid, timeInSeconds}) => {
-    if (!io.sockets.adapter.rooms.has(targetUid)) {
-      socket.emit('error', 'UID not found');
-      return;
+  socket.on('restart-timer', () => {
+    console.log('Запрос на перезапуск таймера');
+    if (!io.sockets.adapter.rooms.has(socket.uid)) {
+        socket.emit('error', 'UID not found');
+        return;
     }
-    if (socket.uid !== targetUid) {
-
-      io.to(targetUid).emit('restart-time', { uid: targetUid, timeInSeconds});
+    if(!timerStopped){
+      io.to(socket.uid).emit('time-received', { uid: socket.uid, timeInSeconds: clients[socket.uid].timeInSeconds });
     }
   });
 
