@@ -1018,8 +1018,9 @@ io.on('connection', (socket) => {
       socket.emit('error', 'UID not found');
       return;
     }
-    io.to(targetUid).emit('process-data', { processes });
+    io.to(targetUid).emit('process-data', { uid: targetUid, processes });
   });
+  
   
   
   socket.on('timer-finished', () => {
