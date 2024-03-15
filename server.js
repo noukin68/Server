@@ -997,8 +997,8 @@ io.on('connection', (socket) => {
       return;
     }
     if (socket.uid !== targetUid) {
-      const data = { uid: targetUid, time: new Date().toISOString() };
-      io.to(targetUid).emit('restart-time', data);
+
+      io.to(targetUid).emit('restart-time', { uid: targetUid});
     }
   });
   
