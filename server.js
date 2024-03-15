@@ -991,8 +991,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('restart-time', () => {
-    io.emit('restart-time');
+  app.get('/restartTimer', (req, res) => {
+    io.emit('restart-timer', {});
+    res.send('Уведомление отправлено');
   });
 
   socket.on('timer-finished', () => {
