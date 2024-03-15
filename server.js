@@ -991,13 +991,14 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('restart-timer', ({ uid: targetUid }) => {
-    console.log('Test completed');
-    const socket = io.sockets.connected[targetUid];
-    if (socket) {
-      socket.emit('restart-timer', { uid: targetUid });
-    } else {
-      console.log(`Socket with id ${targetUid} not found`);
+  socket.on('restart-timer', ({ uid: targetUid}) => {
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+    if (socket.uid !== targetUid) {
+
+      io.to(targetUid).emit('restart-timer', { uid: targetUid});
     }
   });
   
