@@ -993,8 +993,14 @@ io.on('connection', (socket) => {
 
   socket.on('restart-timer', ({ uid: targetUid }) => {
     console.log('Test completed');
-    io.to(targetUid).emit('restart-timer', { uid: targetUid });
+    const socket = io.sockets.connected[targetUid];
+    if (socket) {
+      socket.emit('restart-timer', { uid: targetUid });
+    } else {
+      console.log(`Socket with id ${targetUid} not found`);
+    }
   });
+  
 
   socket.on('timer-finished', () => {
     console.log('Timer finished');
