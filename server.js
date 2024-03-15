@@ -991,25 +991,31 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('restart-time', ({ uid: targetUid}) => {
+  socket.on('restart-time', ({ uid: targetUid, timeInSeconds}) => {
     if (!io.sockets.adapter.rooms.has(targetUid)) {
       socket.emit('error', 'UID not found');
       return;
     }
     if (socket.uid !== targetUid) {
 
-      io.to(targetUid).emit('restart-time', { uid: targetUid});
+      io.to(targetUid).emit('restart-time', { uid: targetUid, timeInSeconds});
+    }
+  });
+
+  socket.on('process-data', ({ uid: targetUid}) => {
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+    if (socket.uid !== targetUid) {
+
+      io.to(targetUid).emit('process-data', { uid: targetUid});
     }
   });
   
-
   socket.on('timer-finished', () => {
     console.log('Timer finished');
     io.emit('timer-finished');
-  });
-
-  socket.on('process-data', (data) => {
-    io.emit('process-data', data);
   });
   
   socket.on('wpf-disconnected', () => {
