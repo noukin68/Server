@@ -991,17 +991,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('restart-time', ({ uid: targetUid}) => {
-    if (!io.sockets.adapter.rooms.has(targetUid)) {
-      socket.emit('error', 'UID not found');
-      return;
-    }
-    if (socket.uid !== targetUid) {
-
-      io.to(targetUid).emit('restart-time', { uid: targetUid});
-    }
+  socket.on('restart-time', () => {
+    io.emit('restart-time');
   });
-  
 
   socket.on('timer-finished', () => {
     console.log('Timer finished');
