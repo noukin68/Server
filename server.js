@@ -991,14 +991,14 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.emit('restart-time', ({ uid: targetUid}) => {
+  socket.on('restart-time', ({ uid: targetUid}) => {
     if (!io.sockets.adapter.rooms.has(targetUid)) {
       socket.emit('error', 'UID not found');
       return;
     }
     if (socket.uid !== targetUid) {
       const data = { uid: targetUid, time: new Date().toISOString() };
-      io.to(targetUid).on('restart-time', data);
+      io.to(targetUid).emit('restart-time', data);
     }
   });
   
