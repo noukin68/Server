@@ -991,7 +991,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('test-completed', ({ uid: targetUid }) => {
+  socket.on('restart-timer', ({ uid: targetUid }) => {
     console.log('Test completed');
     io.to(targetUid).emit('restart-timer', { uid: targetUid });
   });
