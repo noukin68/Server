@@ -1018,10 +1018,9 @@ io.on('connection', (socket) => {
       socket.emit('error', 'UID not found');
       return;
     }
-    if (socket.uid !== targetUid) {
-      io.to(targetUid).emit('process-data', { uid: targetUid, processes });
-    }
-  });  
+    io.to(targetUid).emit('process-data', { processes });
+  });
+  
   
   socket.on('timer-finished', () => {
     console.log('Timer finished');
