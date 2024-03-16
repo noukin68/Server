@@ -1070,6 +1070,35 @@ app.get('/notify', (req, res) => {
   res.send('Уведомление отправлено');
 });
 
+const registerUser = (username, email, password, callback) => {
+  bcrypt.hash(password, 10, (err, hash) => {
+    if (err) {
+      console.error('Ошибка хеширования пароля:', err);
+      return callback(err);
+    }
+
+    const sql = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
+    db.query(sql, [username, email, hash], (err, result) => {
+      if (err) {
+        console.error('Ошибка регистрации пользователя:', err);
+        return callback(err);
+      }
+      callback(null, email);
+    });
+  });
+};
+
+const addLicense = (email, callback) => {
+  const licenseSql = 'INSERT INTO licenses (email) VALUES (?)';
+  db.query(licenseSql, [email], (err, licenseResult) => {
+    if (err) {
+      console.error('Ошибка добавления лицензии:', err);
+      return callback(err);
+    }
+    callback(null);
+  });
+};
+
 app.post('/registerParent', (req, res) => {
   const { username, email, password } = req.body;
 
@@ -1077,29 +1106,18 @@ app.post('/registerParent', (req, res) => {
     return res.status(400).json({ message: 'Пожалуйста, укажите имя пользователя, адрес электронной почты и пароль' });
   }
 
-  bcrypt.hash(password, 10, (err, hash) => {
+  registerUser(username, email, password, (err, email) => {
     if (err) {
-      console.error('Ошибка хеширования пароля:', err);
       return res.status(500).json({ message: 'Внутренняя ошибка сервера' });
     }
 
-    const sql = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
-    db.query(sql, [username, email, hash], (err, result) => {
+    addLicense(email, (err) => {
       if (err) {
-        console.error('Ошибка регистрации пользователя:', err);
         return res.status(500).json({ message: 'Внутренняя ошибка сервера' });
       }
 
-      const licenseSql = 'INSERT INTO licenses (email) VALUES (?)';
-      db.query(licenseSql, [email], (err, licenseResult) => {
-        if (err) {
-          console.error('Ошибка добавления лицензии:', err);
-          return res.status(500).json({ message: 'Внутренняя ошибка сервера' });
-        }
-
-        console.log('Пользователь успешно зарегистрирован');
-        res.status(201).json({ message: 'Пользователь успешно зарегистрирован' });
-      });
+      console.log('Пользователь успешно зарегистрирован');
+      res.status(201).json({ message: 'Пользователь успешно зарегистрирован' });
     });
   });
 });
