@@ -1105,6 +1105,8 @@ app.post('/registerParent', (req, res) => {
 });
 
 app.post('/loginParent', (req, res) => {
+  console.log('Received request data:', req.body); // log request data
+
   const { email, password } = req.body;
 
   if (!email || !password) {
