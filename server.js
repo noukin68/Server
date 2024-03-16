@@ -1067,14 +1067,14 @@ app.post('/registerParent', (req, res) => {
     }
 
     const sql = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
-    connection.query(sql, [username, email, hash], (err, result) => {
+    db.query(sql, [username, email, hash], (err, result) => {
       if (err) {
         console.error('Ошибка регистрации пользователя:', err);
         return res.status(500).json({ message: 'Внутренняя ошибка сервера' });
       }
 
       const licenseSql = 'INSERT INTO licenses (email) VALUES (?)';
-      connection.query(licenseSql, [email], (err, licenseResult) => {
+      db.query(licenseSql, [email], (err, licenseResult) => {
         if (err) {
           console.error('Ошибка добавления лицензии:', err);
           return res.status(500).json({ message: 'Внутренняя ошибка сервера' });
@@ -1095,7 +1095,7 @@ app.post('/loginParent', (req, res) => {
   }
 
   const sql = 'SELECT * FROM users WHERE email = ?';
-  connection.query(sql, [email], (err, results) => {
+  db.query(sql, [email], (err, results) => {
     if (err) {
       console.error('Ошибка поиска пользователя:', err);
       return res.status(500).json({ message: 'Внутренняя ошибка сервера' });
@@ -1124,7 +1124,7 @@ app.post('/check-license', (req, res) => {
   const { email } = req.body;
 
   const query = 'SELECT * FROM licenses WHERE email = ? AND license_key != "default_value"';
-  connection.query(query, [email], (error, results) => {
+  db.query(query, [email], (error, results) => {
     if (error) {
       console.error(error);
       res.status(500).send('Внутренняя ошибка сервера');
@@ -1144,7 +1144,7 @@ app.post('/activate-product', (req, res) => {
   const key = crypto.randomBytes(20).toString('hex');
 
   const query = 'UPDATE licenses SET license_key = ? WHERE email = ?';
-  connection.query(query, [key, email], (error, results) => {
+  db.query(query, [key, email], (error, results) => {
     if (error) {
       console.error(error);
       res.status(500).send('Внутренняя ошибка сервера');
