@@ -1105,11 +1105,12 @@ app.post('/registerParent', (req, res) => {
 });
 
 app.post('/loginParent', (req, res) => {
-  console.log('Received request data:', req.body); // log request data
+  server.log('Received request data:', req.body); // log request data
 
   const { email, password } = req.body;
 
   if (!email || !password) {
+    server.log('Missing email or password in request body'); // log missing data
     return res.status(400).json({ message: 'Пожалуйста, укажите адрес электронной почты и пароль' });
   }
 
@@ -1121,6 +1122,7 @@ app.post('/loginParent', (req, res) => {
     }
 
     if (results.length === 0) {
+      server.log('User not found in database'); // log user not found
       return res.status(401).json({ message: 'Неправильный адрес электронной почты или пароль' });
     }
 
@@ -1131,9 +1133,11 @@ app.post('/loginParent', (req, res) => {
       }
 
       if (!result) {
+        server.log('Passwords do not match'); // log password mismatch
         return res.status(401).json({ message: 'Неправильный адрес электронной почты или пароль' });
       }
 
+      server.log('Login successful for user:', email); // log successful login
       return res.status(200).json({ message: 'Авторизация успешна' });
     });
   });
