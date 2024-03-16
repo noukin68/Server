@@ -1066,13 +1066,15 @@ app.post('/registerParent', (req, res) => {
       return res.status(500).json({ message: 'Внутренняя ошибка сервера' });
     }
 
-    db.query('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, hash], (err, result) => {
+    const sql = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
+    db.query(sql, [username, email, hash], (err, result) => {
       if (err) {
         console.error('Ошибка регистрации пользователя:', err);
         return res.status(500).json({ message: 'Внутренняя ошибка сервера' });
       }
 
-      db.query('INSERT INTO licenses (email) VALUES (?)', [email], (err, licenseResult) => {
+      const licenseSql = 'INSERT INTO licenses (email) VALUES (?)';
+      db.query(licenseSql, [email], (err, licenseResult) => {
         if (err) {
           console.error('Ошибка добавления лицензии:', err);
           return res.status(500).json({ message: 'Внутренняя ошибка сервера' });
