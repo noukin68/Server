@@ -43,7 +43,7 @@ app.post('/clients', (req, res) => {
 
   // Insert the new client into the database
   const query = 'INSERT INTO clients (email, pass) VALUES (?, ?)';
-  connection.query(query, [email, pass], (err, results) => {
+  db.query(query, [email, pass], (err, results) => {
     if (err) {
       console.error(err);
       res.status(500).send('Error adding client');
