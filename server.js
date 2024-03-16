@@ -1,11 +1,12 @@
 const express = require('express');
-const mysql = require('mysql2');
+const mysql = require('mysql');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
+const bodyParser = require('body-parser');
 
 const app = express();
 const server = http.createServer(app);
@@ -26,6 +27,8 @@ db.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
   console.log('The solution is: ', results[0].solution);
 });
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json());
 app.use((req, res, next) => {
@@ -33,6 +36,22 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
+});
+
+app.post('/clients', (req, res) => {
+  const { email, pass } = req.body;
+
+  // Insert the new client into the database
+  const query = 'INSERT INTO clients (email, pass) VALUES (?, ?)';
+  connection.query(query, [email, pass], (err, results) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error adding client');
+    } else {
+      console.log(`Added client with ID: ${results.insertId}`);
+      res.status(201).send(`Added client with ID: ${results.insertId}`);
+    }
+  });
 });
 
 //Вход администратора
