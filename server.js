@@ -1425,8 +1425,8 @@ app.get('/licenseInfo/:userId', (req, res) => {
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'your-email@gmail.com',
-    pass: 'your-email-password',
+    user: 'dnsd28807@gmail.com',
+    pass: 'Fui27-62+As89Jkew',
   },
 });
 
@@ -1438,7 +1438,7 @@ app.post('/sendEmailVerificationCode', (req, res) => {
 
   // Отправьте код подтверждения на электронную почту
   const mailOptions = {
-    from: 'familyControl@yandex.com',
+    from: 'dnsd28807@gmail.com',
     to: email,
     subject: 'Код подтверждения электронной почты',
     text: `Ваш код подтверждения: ${verificationCode}`,
