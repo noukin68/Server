@@ -8,6 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const nodemailer = require('nodemailer');
 
 const multer  = require('multer');
 const storage = multer.diskStorage({
@@ -1417,6 +1418,38 @@ app.get('/licenseInfo/:userId', (req, res) => {
     };
 
     return res.status(200).json(licenseInfo);
+  });
+});
+
+// Создайте транспортный объект nodemailer для отправки электронной почты
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'your-email@gmail.com',
+    pass: 'your-email-password',
+  },
+});
+
+app.post('/sendEmailVerificationCode', (req, res) => {
+  const { email } = req.body;
+
+  // Сгенерируйте случайный код подтверждения
+  const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
+  // Отправьте код подтверждения на электронную почту
+  const mailOptions = {
+    from: 'familyControl@yandex.com',
+    to: email,
+    subject: 'Код подтверждения электронной почты',
+    text: `Ваш код подтверждения: ${verificationCode}`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Ошибка отправки кода подтверждения' });
+    }
+    return res.status(200).json({ message: 'Код подтверждения отправлен на вашу электронную почту' });
   });
 });
 
