@@ -1421,6 +1421,16 @@ app.get('/licenseInfo/:userId', (req, res) => {
   });
 });
 
+const transporter = nodemailer.createTransport({
+  host: 'smtp-mail.outlook.com',
+  port: 587,
+  secure: false, // true для 465, false для других портов
+  auth: {
+    user: 'outlook_896A6C8FC0B4EFA0@outlook.com',
+    pass: 'f-573Gyi5vH'
+  }
+});
+
 app.post('/sendEmailVerificationCode', (req, res) => {
   const { email } = req.body;
 
@@ -1436,16 +1446,8 @@ app.post('/sendEmailVerificationCode', (req, res) => {
   // Здесь нужно написать код для сохранения verificationCode в базе данных
 
   // Отправка электронного письма с кодом подтверждения
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: 'marenckov.ilia@gmail.com',
-      pass: '48+#Fuv-tbDc47'
-    }
-  });
-
   const mailOptions = {
-    from: 'marenckov.ilia@gmail.com',
+    from: 'outlook_896A6C8FC0B4EFA0@outlook.com',
     to: email,
     subject: 'Код подтверждения электронной почты',
     text: `Ваш код подтверждения: ${verificationCode}`
@@ -1460,6 +1462,8 @@ app.post('/sendEmailVerificationCode', (req, res) => {
     return res.status(200).json({ message: 'Код подтверждения отправлен' });
   });
 });
+
+
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
