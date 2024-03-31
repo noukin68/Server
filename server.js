@@ -1318,7 +1318,7 @@ app.post('/uploadAvatar/:userId', upload.single('avatar'), (req, res) => {
   }
 
   // Обновляем URL аватара в базе данных
-  const avatarUrl = 'http://localhost:3000/uploads/' + avatarFile.originalname;
+  const avatarUrl = 'http://62.217.182.138:3000/uploads/' + avatarFile.originalname;
   const sql = 'UPDATE users SET avatar_url = ? WHERE id = ?';
   db.query(sql, [avatarUrl, userId], (err, result) => {
     if (err) {
