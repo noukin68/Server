@@ -1421,27 +1421,34 @@ app.get('/licenseInfo/:userId', (req, res) => {
   });
 });
 
-// Создайте транспортный объект nodemailer для отправки электронной почты
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'dnsd28807@gmail.com',
-    pass: 'Fui27-62+As89Jkew',
-  },
-});
-
 app.post('/sendEmailVerificationCode', (req, res) => {
   const { email } = req.body;
 
-  // Сгенерируйте случайный код подтверждения
+  // Проверка наличия email в запросе
+  if (!email) {
+    return res.status(400).json({ error: 'Email не указан' });
+  }
+
+  // Генерация кода подтверждения (например, 6 цифр)
   const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
-  // Отправьте код подтверждения на электронную почту
+  // Сохранение кода подтверждения в базе данных (в таблице users или в отдельной таблице email_verification)
+  // Здесь нужно написать код для сохранения verificationCode в базе данных
+
+  // Отправка электронного письма с кодом подтверждения
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'marenckov.ilia@gmail.com',
+      pass: '48+#Fuv-tbDc47'
+    }
+  });
+
   const mailOptions = {
-    from: 'dnsd28807@gmail.com',
+    from: 'marenckov.ilia@gmail.com',
     to: email,
     subject: 'Код подтверждения электронной почты',
-    text: `Ваш код подтверждения: ${verificationCode}`,
+    text: `Ваш код подтверждения: ${verificationCode}`
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
@@ -1449,7 +1456,8 @@ app.post('/sendEmailVerificationCode', (req, res) => {
       console.error(error);
       return res.status(500).json({ error: 'Ошибка отправки кода подтверждения' });
     }
-    return res.status(200).json({ message: 'Код подтверждения отправлен на вашу электронную почту' });
+
+    return res.status(200).json({ message: 'Код подтверждения отправлен' });
   });
 });
 
