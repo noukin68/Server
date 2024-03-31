@@ -1173,6 +1173,115 @@ app.post('/check-uid-license', (req, res) => {
 
 
 
+const moment = require('moment');
+
+// Маршрут для покупки лицензии
+app.post('/purchaseLicense', (req, res) => {
+  const { cardNumber, expirationDate, cvv, userId, selectedPlanIndex } = req.body; // Извлечение данных из тела запроса
+  const tariffPlans = [
+    { title: 'Базовый', description: 'Описание базового плана', days: 30, price: 450 },
+    { title: 'Стандартный', description: 'Описание стандартного плана', days: 90, price: 1350 },
+    { title: 'Премиум', description: 'Описание премиум плана', days: 365, price: 5400 },
+  ];
+
+  // Проверка наличия всех необходимых данных о карте, userId и выбранном плане
+  if (!cardNumber || !expirationDate || !cvv || !userId || selectedPlanIndex === undefined) {
+    return res.status(400).json({ error: 'Пожалуйста, заполните все поля карты, userId и выберите тарифный план' });
+  }
+
+  // Здесь должна быть логика проверки данных карты (например, валидация номера карты, проверка срока действия и т. д.)
+
+  // Если userId не определен, возвращаем ошибку
+  if (!userId) {
+    return res.status(401).json({ error: 'Пользователь не аутентифицирован' });
+  }
+
+  // Получаем информацию о выбранном тарифном плане
+  const selectedPlan = tariffPlans[selectedPlanIndex];
+
+  // Получаем текущую дату
+  const currentDate = moment();
+
+  // Добавляем количество дней из выбранного плана к текущей дате для определения срока окончания лицензии
+  const licenseExpirationDate = currentDate.clone().add(selectedPlan.days, 'days');
+
+  const uid = generateUniqueUid(7); 
+
+  // Добавление новой лицензии в базу данных
+  db.query(
+    'INSERT INTO licenses (user_id, uid, expiration_date) VALUES (?, ?, ?)',
+    [userId, uid, licenseExpirationDate.format('YYYY-MM-DD')],
+    (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Ошибка создания лицензии' });
+      }
+
+      // Возвращаем информацию о созданной лицензии
+      return res.status(200).json({ message: 'Лицензия успешно создана', uid });
+    }
+  );
+});
+
+// Маршрут для продления лицензии
+app.post('/renewLicense', (req, res) => {
+  const { cardNumber, expirationDate, cvv, userId, selectedPlanIndex } = req.body;
+
+  // Проверка наличия всех необходимых данных о карте, userId и selectedPlanIndex
+  if (!cardNumber || !expirationDate || !cvv || !userId || selectedPlanIndex === undefined) {
+    return res.status(400).json({ error: 'Пожалуйста, заполните все поля карты, userId и selectedPlanIndex' });
+  }
+
+  // Определение массива тарифных планов
+  const tariffPlans = [
+    { title: 'На месяц', description: 'Продлите лицензию на один месяц.', days: 30, price: 450 },
+    { title: 'На 3 месяца', description: 'Продлите лицензию на три месяца.', days: 90, price: 1350 },
+    { title: 'На год', description: 'Продлите лицензию на год.', days: 365, price: 5400 },
+  ];
+
+  // Получение текущей даты
+  const currentDate = moment();
+
+  // Получение информации о лицензии пользователя из базы данных
+  db.query(
+    'SELECT expiration_date FROM licenses WHERE user_id = ? AND is_active = true',
+    userId,
+    (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Ошибка при получении информации о лицензии пользователя' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Лицензия не найдена' });
+      }
+
+      const currentExpirationDate = moment(results[0].expiration_date);
+
+      // Получение количества дней из выбранного тарифного плана
+      const selectedPlan = tariffPlans[selectedPlanIndex];
+      const licenseDays = selectedPlan.days;
+
+      // Вычисление новой даты истечения лицензии на основе текущей даты и выбранного тарифного плана
+      const newExpirationDate = currentExpirationDate.clone().add(licenseDays, 'days');
+
+      // Обновление существующей записи в базе данных с новой датой истечения лицензии
+      db.query(
+        'UPDATE licenses SET expiration_date = ? WHERE user_id = ? AND is_active = true',
+        [newExpirationDate.format('YYYY-MM-DD'), userId],
+       (err, results) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Ошибка продления лицензии' });
+          }
+
+          // Возвращение информации о продленной лицензии
+          return res.status(200).json({ message: 'Лицензия успешно продлена', expiration_date: newExpirationDate.format('YYYY-MM-DD') });
+        }
+      );
+    }
+  );
+});
 
 
 
