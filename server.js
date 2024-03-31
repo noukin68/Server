@@ -1458,7 +1458,35 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
   }
 });
 
+app.post('/verifyEmail', async (req, res) => {
+  const { email, code } = req.body;
 
+  // Проверка наличия email и code в запросе
+  if (!email || !code) {
+    return res.status(400).json({ error: 'Email или код не указан' });
+  }
+
+  try {
+    // Получение кода подтверждения из базы данных
+    const verification = await db.query('SELECT * FROM email_verification WHERE email = ? AND code = ?', [email, code]);
+
+    // Проверка корректности кода подтверждения
+    if (verification.length === 0) {
+      return res.status(400).json({ error: 'Неверный код подтверждения' });
+    }
+
+    // Удаление кода подтверждения из базы данных
+    await db.query('DELETE FROM email_verification WHERE email = ? AND code = ?', [email, code]);
+
+    // Обновление статуса подтверждения email в таблице users
+    await db.query('UPDATE users SET email_verified = true WHERE email = ?', [email]);
+
+    return res.status(200).json({ message: 'Email подтвержден' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Ошибка подтверждения email' });
+  }
+});
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
