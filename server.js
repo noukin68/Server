@@ -1422,11 +1422,12 @@ app.get('/licenseInfo/:userId', (req, res) => {
 });
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.ethereal.email',
-  port: 587,
+  host: 'smtp.mail.ru',
+  port: 465,
+  secure: true,
   auth: {
-      user: 'eleazar.balistreri98@ethereal.email',
-      pass: 'gJ5uZDkn8zkKjsntJC'
+      user: 'noukin68@mail.ru',
+      pass: '12772003ilIA'
   }
 });
 
