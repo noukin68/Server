@@ -1422,12 +1422,11 @@ app.get('/licenseInfo/:userId', (req, res) => {
 });
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp-mail.outlook.com',
+  host: 'smtp.ethereal.email',
   port: 587,
-  secure: false, // true для 465, false для других портов
   auth: {
-    user: 'outlook_896A6C8FC0B4EFA0@outlook.com',
-    pass: 'f-573Gyi5vH'
+      user: 'eleazar.balistreri98@ethereal.email',
+      pass: 'gJ5uZDkn8zkKjsntJC'
   }
 });
 
@@ -1447,7 +1446,7 @@ app.post('/sendEmailVerificationCode', (req, res) => {
 
   // Отправка электронного письма с кодом подтверждения
   const mailOptions = {
-    from: 'outlook_896A6C8FC0B4EFA0@outlook.com',
+    from: 'eleazar.balistreri98@ethereal.email',
     to: email,
     subject: 'Код подтверждения электронной почты',
     text: `Ваш код подтверждения: ${verificationCode}`
