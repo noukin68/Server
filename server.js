@@ -1431,7 +1431,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-app.post('/sendEmailVerificationCode', (req, res) => {
+app.post('/sendEmailVerificationCode', async (req, res) => {
   const { email } = req.body;
 
   // Проверка наличия email в запросе
@@ -1439,28 +1439,28 @@ app.post('/sendEmailVerificationCode', (req, res) => {
     return res.status(400).json({ error: 'Email не указан' });
   }
 
-  // Генерация кода подтверждения (например, 6 цифр)
-  const verificationCode = Math.floor(100000 + Math.random() * 900000);
+  try {
+    // Генерация кода подтверждения (например, 6 цифр)
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
-  // Сохранение кода подтверждения в базе данных (в таблице users или в отдельной таблице email_verification)
-  // Здесь нужно написать код для сохранения verificationCode в базе данных
+    // Сохранение кода подтверждения в базе данных (в таблице users или в отдельной таблице email_verification)
+    // Здесь нужно написать код для сохранения verificationCode в базе данных
 
-  // Отправка электронного письма с кодом подтверждения
-  const mailOptions = {
-    from: 'noukin68@mail.ru',
-    to: email,
-    subject: 'Код подтверждения электронной почты',
-    text: `Ваш код подтверждения: ${verificationCode}`
-  };
+    // Отправка электронного письма с кодом подтверждения
+    const mailOptions = {
+      from: 'noukin68@mail.ru',
+      to: email,
+      subject: 'Код подтверждения электронной почты',
+      text: `Ваш код подтверждения: ${verificationCode}`
+    };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error(error);
-      return res.status(500).json({ error: 'Ошибка отправки кода подтверждения' });
-    }
+    await transporter.sendMail(mailOptions);
 
     return res.status(200).json({ message: 'Код подтверждения отправлен' });
-  });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Ошибка отправки кода подтверждения' });
+  }
 });
 
 
