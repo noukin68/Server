@@ -1283,7 +1283,142 @@ app.post('/renewLicense', (req, res) => {
   );
 });
 
+function generateUniqueUid(length) {
+  const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let uid = '';
+  const charactersLength = characters.length;
 
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * charactersLength);
+    uid += characters[randomIndex];
+  }
+
+  // Проверяем, что сгенерированный UID уникален
+  if (Object.values(clients).some(client => client.uid === uid)) {
+    // Если не уникален, рекурсивно вызываем функцию снова
+    return generateUniqueUid(length);
+  }
+
+  return uid;
+}
+
+// Обработчик POST запроса для загрузки аватара
+app.post('/uploadAvatar/:userId', upload.single('avatar'), (req, res) => {
+  const userId = req.params.userId;
+  const avatarFile = req.file;
+
+  if (!avatarFile) {
+    res.status(400).send('No file uploaded');
+    return;
+  }
+
+  // Обновляем URL аватара в базе данных
+  const avatarUrl = 'http://62.217.182.138:3000/uploads/' + avatarFile.originalname;
+  const sql = 'UPDATE users SET avatar_url = ? WHERE id = ?';
+  db.query(sql, [avatarUrl, userId], (err, result) => {
+    if (err) {
+      throw err;
+    }
+    console.log('Avatar URL updated');
+    res.status(200).json({ avatarUrl }); // Возвращаем URL аватара в качестве ответа
+  });
+});
+
+// Маршрут для получения аватара пользователя
+app.get('/getAvatar/:userId', (req, res) => {
+  const userId = req.params.userId;
+
+  // Получаем URL аватара из базы данных
+  const sql = 'SELECT avatar_url FROM users WHERE id = ?';
+  db.query(sql, [userId], (err, result) => {
+    if (err) {
+      throw err;
+    }
+
+    if (result.length === 0 || !result[0].avatar_url) {
+      // Если пользователь не найден или у него нет аватара, возвращаем ошибку 404
+      res.status(404).send('Avatar not found');
+      return;
+    }
+
+    const avatarUrl = result[0].avatar_url;
+    res.status(200).json({ avatarUrl }); // Возвращаем URL аватара в качестве ответа
+  });
+});
+
+
+app.get('/user/:userId', (req, res) => {
+  const userId = req.params.userId;
+
+  // Запрос к базе данных для получения информации о пользователе
+  db.query('SELECT * FROM users WHERE id = ?', userId, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Ошибка при получении информации о пользователе' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    const userInfo = {
+      id: results[0].id,
+      username: results[0].username,
+      email: results[0].email,
+      phone_number: results[0].phone_number,
+      created_at: results[0].created_at,
+    };
+
+    return res.status(200).json(userInfo);
+  });
+});
+
+// Маршрут для проверки статуса лицензии пользователя
+app.get('/licenseStatus/:userId', (req, res) => {
+  const userId = req.params.userId;
+
+  // Запрос к базе данных для получения информации о статусе лицензии пользователя
+  db.query('SELECT * FROM licenses WHERE user_id = ? AND is_active = true', userId, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Ошибка при проверке статуса лицензии' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ active: false, message: 'Лицензия не активна' });
+    }
+
+    const licenseInfo = {
+      active: true,
+      expiration_date: results[0].expiration_date,
+      // Здесь вы можете добавить другие необходимые данные о лицензии
+    };
+
+    return res.status(200).json(licenseInfo);
+  });
+});
+
+app.get('/licenseInfo/:userId', (req, res) => {
+  const userId = req.params.userId;
+
+  db.query('SELECT uid, DATE_FORMAT(expiration_date, "%Y-%m-%dT%H:%i:%s.000Z") as expiration_date FROM licenses WHERE user_id = ?', userId, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Ошибка при получении информации о лицензии' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Лицензия не найдена' });
+    }
+
+    const licenseInfo = {
+      uid: results[0].uid,
+      expiration_date: results[0].expiration_date,
+    };
+
+    return res.status(200).json(licenseInfo);
+  });
+});
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
