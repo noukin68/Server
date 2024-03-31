@@ -1447,7 +1447,7 @@ app.post('/sendEmailVerificationCode', (req, res) => {
 
   // Отправка электронного письма с кодом подтверждения
   const mailOptions = {
-    from: 'eleazar.balistreri98@ethereal.email',
+    from: 'noukin68@mail.ru',
     to: email,
     subject: 'Код подтверждения электронной почты',
     text: `Ваш код подтверждения: ${verificationCode}`
