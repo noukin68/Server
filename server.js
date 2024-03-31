@@ -1424,7 +1424,7 @@ app.get('/licenseInfo/:userId', (req, res) => {
 const transporter = nodemailer.createTransport({
   host: 'smtp.mail.ru',
   port: 465,
-  secure: false,
+  secure: true,
   auth: {
       user: 'noukin68@mail.ru',
       pass: '12772003ilIA'
