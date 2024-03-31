@@ -1433,20 +1433,15 @@ const transporter = nodemailer.createTransport({
 
 app.post('/sendEmailVerificationCode', async (req, res) => {
   const { email } = req.body;
-
-  // Проверка наличия email в запросе
   if (!email) {
     return res.status(400).json({ error: 'Email не указан' });
   }
 
   try {
-    // Генерация кода подтверждения (например, 6 цифр)
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
-    // Сохранение кода подтверждения в базе данных (в таблице users или в отдельной таблице email_verification)
-    // Здесь нужно написать код для сохранения verificationCode в базе данных
+    await db.query('INSERT INTO email_verification (email, code) VALUES (?, ?)', [email, verificationCode]);
 
-    // Отправка электронного письма с кодом подтверждения
     const mailOptions = {
       from: 'noukin68@mail.ru',
       to: email,
