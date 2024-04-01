@@ -1474,6 +1474,12 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
   }
 
   try {
+    // Проверяем, существует ли email в таблице email_verification
+    const existingEmail = await db.query('SELECT * FROM email_verification WHERE email = ?', [email]);
+    if (existingEmail.length > 0) {
+      return res.status(400).json({ error: 'Email уже существует' });
+    }
+
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
     await db.query('INSERT INTO email_verification (email, code) VALUES (?, ?)', [email, verificationCode]);
