@@ -1176,9 +1176,8 @@ app.post('/check-uid-license', (req, res) => {
 
 const moment = require('moment');
 
-// Маршрут для покупки лицензии
 app.post('/purchaseLicense', (req, res) => {
-  const { cardNumber, expirationDate, cvv, userId, selectedPlanIndex } = req.body; // Извлечение данных из тела запроса
+  const { cardNumber, expirationDate, cvv, userId, selectedPlanIndex } = req.body;
   const tariffPlans = [
     { title: 'Базовый', description: 'Описание базового плана', days: 30, price: 450 },
     { title: 'Стандартный', description: 'Описание стандартного плана', days: 90, price: 1350 },
@@ -1206,22 +1205,59 @@ app.post('/purchaseLicense', (req, res) => {
   // Добавляем количество дней из выбранного плана к текущей дате для определения срока окончания лицензии
   const licenseExpirationDate = currentDate.clone().add(selectedPlan.days, 'days');
 
-  const uid = generateUniqueUid(7); 
+  const uid = generateUniqueUid(7);
 
-  // Добавление новой лицензии в базу данных
-  db.query(
-    'INSERT INTO licenses (user_id, uid, expiration_date) VALUES (?, ?, ?)',
-    [userId, uid, licenseExpirationDate.format('YYYY-MM-DD')],
-    (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Ошибка создания лицензии' });
-      }
-
-      // Возвращаем информацию о созданной лицензии
-      return res.status(200).json({ message: 'Лицензия успешно создана', uid });
+  // Получаем email пользователя из базы данных
+  db.query('SELECT email FROM users WHERE id = ?', [userId], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Ошибка получения email пользователя' });
     }
-  );
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    const userEmail = results[0].email;
+
+    // Добавление новой лицензии в базу данных
+    db.query(
+      'INSERT INTO licenses (user_id, uid, expiration_date) VALUES (?, ?, ?)',
+      [userId, uid, licenseExpirationDate.format('YYYY-MM-DD')],
+      (err, results) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Ошибка создания лицензии' });
+        }
+
+        // Отправка письма с ссылками на скачивание приложения
+        const mailOptions = {
+          from: 'noukin68@mail.ru',
+          to: userEmail,
+          subject: 'Спасибо за покупку лицензии',
+          html: `
+            <p>Спасибо за покупку лицензии на ${selectedPlan.days} дней.</p>
+            <p>Вы можете скачать приложение по следующим ссылкам:</p>
+            <ul>
+              <li><a href="https://example.com/download/windows">Скачать для Windows</a></li>
+              <li><a href="https://example.com/download/android">Скачать для Android</a></li>
+            </ul>
+          `
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error(error);
+          } else {
+            console.log(`Email sent: ${info.response}`);
+          }
+        });
+
+        // Возвращаем информацию о созданной лицензии
+        return res.status(200).json({ message: 'Лицензия успешно создана', uid });
+      }
+    );
+  });
 });
 
 // Маршрут для продления лицензии
