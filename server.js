@@ -1039,15 +1039,10 @@ io.on('connection', (socket) => {
         socket.emit('error', 'UID not found');
         return;
     }
-    if (!clients[socket.uid] || !clients[socket.uid].timeInSeconds) {
-        console.log('Time not found for uid:', socket.uid);
-        return;
-    }
     if(!timerStopped){
-        io.to(socket.uid).emit('time-received', { uid: socket.uid, timeInSeconds: clients[socket.uid].timeInSeconds });
+      io.to(socket.uid).emit('restart-time', { uid: socket.uid, timeInSeconds: clients[socket.uid].timeInSeconds });
     }
   });
-  
 
   socket.on('restart-time', ({ uid: targetUid, timeInSeconds}) => {
     if (!io.sockets.adapter.rooms.has(targetUid)) {
