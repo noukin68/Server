@@ -1039,9 +1039,10 @@ io.on('connection', (socket) => {
         socket.emit('error', 'UID not found');
         return;
     }
-    const timeInSeconds = clients[socket.uid]?.timeInSeconds || 0;
-    io.to(socket.uid).emit('restart-time', { uid: socket.uid, timeInSeconds });
-});
+    if(!timerStopped){
+      io.to(socket.uid).emit('time-received', { uid: socket.uid, timeInSeconds: clients[socket.uid].timeInSeconds });
+    }
+  });
 
   socket.on('restart-time', ({ uid: targetUid, timeInSeconds}) => {
     if (!io.sockets.adapter.rooms.has(targetUid)) {
