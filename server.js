@@ -1033,17 +1033,15 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('restart-timer', () => {
+  socket.on('restart-time', ({ timeInSeconds }) => {
     console.log('Запрос на перезапуск таймера');
     if (!io.sockets.adapter.rooms.has(socket.uid)) {
         socket.emit('error', 'UID not found');
         return;
     }
-    if(!timerStopped){
-      io.to(socket.uid).emit('time-received', { uid: socket.uid, timeInSeconds: clients[socket.uid].timeInSeconds });
-    }
+    clients[socket.uid] = { timeInSeconds }; // Сохраняем первоначальное время таймера
+    io.to(socket.uid).emit('time-received', { uid: socket.uid, timeInSeconds });
   });
-
 
   socket.on('process-data', ({ uid: targetUid, processes }) => {
     if (!io.sockets.adapter.rooms.has(targetUid)) {
