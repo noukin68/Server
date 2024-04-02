@@ -1039,25 +1039,21 @@ io.on('connection', (socket) => {
         socket.emit('error', 'UID not found');
         return;
     }
-    if (!timerStopped) {
-        const uid = socket.uid;
-        const timeInSeconds = clients[uid].timeInSeconds;
-        console.log(`UID: ${uid}, Время: ${timeInSeconds}`);
-        io.to(uid).emit('time-received', { uid: uid, timeInSeconds: timeInSeconds });
+    if(!timerStopped){
+      io.to(socket.uid).emit('time-received', { uid: socket.uid, timeInSeconds: clients[socket.uid].timeInSeconds });
     }
-});
+  });
 
-socket.on('restart-time', ({ uid: targetUid, timeInSeconds }) => {
+  socket.on('restart-time', ({ uid: targetUid, timeInSeconds}) => {
     if (!io.sockets.adapter.rooms.has(targetUid)) {
-        socket.emit('error', 'UID not found');
-        return;
+      socket.emit('error', 'UID not found');
+      return;
     }
     if (socket.uid !== targetUid) {
-        console.log(`UID: ${targetUid}, Время: ${timeInSeconds}`);
-        io.to(targetUid).emit('restart-time', { uid: targetUid, timeInSeconds });
-    }
-});
 
+      io.to(targetUid).emit('restart-time', { uid: targetUid, timeInSeconds});
+    }
+  });
 
   socket.on('process-data', ({ uid: targetUid, processes }) => {
     if (!io.sockets.adapter.rooms.has(targetUid)) {
