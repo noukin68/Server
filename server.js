@@ -1263,18 +1263,18 @@ app.post('/purchaseLicense', (req, res) => {
 
 // Маршрут для продления лицензии
 app.post('/renewLicense', (req, res) => {
-  const { cardNumber, expirationDate, cvv, userId, selectedPlanIndex } = req.body;
+  const {userId, selectedPlanIndex } = req.body;
 
   // Проверка наличия всех необходимых данных о карте, userId и selectedPlanIndex
-  if (!cardNumber || !expirationDate || !cvv || !userId || selectedPlanIndex === undefined) {
+  if (!userId || selectedPlanIndex === undefined) {
     return res.status(400).json({ error: 'Пожалуйста, заполните все поля карты, userId и selectedPlanIndex' });
   }
 
   // Определение массива тарифных планов
   const tariffPlans = [
-    { title: 'На месяц', description: 'Продлите лицензию на один месяц.', days: 30, price: 450 },
-    { title: 'На 3 месяца', description: 'Продлите лицензию на три месяца.', days: 90, price: 1350 },
-    { title: 'На год', description: 'Продлите лицензию на год.', days: 365, price: 5400 },
+    { title: 'На месяц', days: 30, price: 450 },
+    { title: 'На 3 месяца', days: 90, price: 1350 },
+    { title: 'На год', days: 365, price: 5400 },
   ];
 
   // Получение текущей даты
