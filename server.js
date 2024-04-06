@@ -944,24 +944,51 @@ db.query(
 
 //--Родительский контроль--//
 
-const clients = {};
+const clients = {
+  flutter: {},
+  wpf: {}
+};
 
 io.on('connection', (socket) => {
 
-  socket.on('join', (uid) => {
-    db.query('SELECT * FROM licenses WHERE uid = ?', [uid], (err, results) => {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      if (results.length === 0 || !results[0].is_active || new Date(results[0].expiration_date) < new Date()) {
-        socket.emit('invalid-uid-license', { uid, message: 'UID or license is invalid' });
-        return;
-      }
-      socket.join(uid);
-      socket.emit('joined', { uid });
-    });
+  socket.on('join', (data) => {
+      const { uid, type } = data;
+      db.query('SELECT * FROM licenses WHERE uid = ?', [uid], (err, results) => {
+          if (err) {
+              console.error(err);
+              return;
+          }
+          if (results.length === 0 || !results[0].is_active || new Date(results[0].expiration_date) < new Date()) {
+              socket.emit('invalid-uid-license', { uid, message: 'UID or license is invalid' });
+              return;
+          }
+          socket.join(uid);
+          socket.emit('joined', { uid, type });
+      });
   });
+
+  socket.on('flutter-connected', ({ uid }) => {
+      clients.flutter[uid] = socket.id;
+      io.emit('connection-status', { uid, connected: true, type: 'flutter' });
+  });
+
+  socket.on('flutter-disconnected', ({ uid }) => {
+    clients.flutter[uid] = socket.id;
+    io.emit('connection-status', { uid, connected: false, type: 'flutter' });
+    delete clients.flutter[uid];
+});
+
+  socket.on('wpf-connected', ({ uid }) => {
+      clients.wpf[uid] = socket.id;
+      io.emit('connection-status', { uid, connected: true, type: 'wpf' });
+  });
+
+  socket.on('wpf-disconnected', ({ uid }) => {
+    clients.wpf[uid] = socket.id;
+    io.emit('connection-status', { uid, connected: false, type: 'wpf' });
+    delete clients.wpf[uid];
+});
+
 
 
   socket.on('command', (command) => {
@@ -975,6 +1002,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('time-received', ({ uid: targetUid, timeInSeconds }) => {
+    const targetSocket = clients[targetUid];
     if (!io.sockets.adapter.rooms.has(targetUid)) {
         socket.emit('error', 'UID not found');
         return;
@@ -1033,16 +1061,21 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('restart-timer', () => {
+  socket.on('restart-timer', (targetUid) => {
     console.log('Запрос на перезапуск таймера');
-    if (!io.sockets.adapter.rooms.has(socket.uid)) {
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
         socket.emit('error', 'UID not found');
         return;
     }
-    if(!timerStopped){
-      io.to(socket.uid).emit('time-received', { uid: socket.uid, timeInSeconds: clients[socket.uid].timeInSeconds });
+    if (timerStopped) {
+      console.log('Таймер был остановлен, перезапуск отменен');
+      return;
     }
-  });
+    if(!timerStopped){
+      io.to(targetUid).emit('time-received', { uid: targetUid, timeInSeconds: clients[targetUid].timeInSeconds });
+    }
+});
+
 
   socket.on('restart-time', ({ uid: targetUid, timeInSeconds}) => {
     if (!io.sockets.adapter.rooms.has(targetUid)) {
@@ -1054,7 +1087,6 @@ io.on('connection', (socket) => {
       io.to(targetUid).emit('restart-time', { uid: targetUid, timeInSeconds});
     }
   });
-
 
   socket.on('process-data', ({ uid: targetUid, processes }) => {
     if (!io.sockets.adapter.rooms.has(targetUid)) {
@@ -1076,6 +1108,15 @@ io.on('connection', (socket) => {
   socket.on('check_uid', (uid) => {
     const exists = clients[uid] !== undefined;
     socket.emit('uid_check_result', { uid, exists });
+  });
+
+  socket.on('disconnect-uid', (uid) => {
+    const targetUid = uid;
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
+      socket.emit('error', 'UID not found');
+      return;
+    }
+    io.to(targetUid).emit('disconnect-action');
   });
 
   socket.on('disconnect', () => {
@@ -1168,6 +1209,32 @@ app.post('/check-uid-license', (req, res) => {
       res.status(403).json({ error: 'License is not active or has expired' });
       return;
     }
+    res.json({ message: 'UID and license are valid' });
+  });
+});
+
+app.post('/check-uid-license-wpf', (req, res) => {
+  const { uid } = req.body;
+
+  // Запрос к базе данных для получения информации о лицензии по UID
+  db.query('SELECT * FROM licenses WHERE uid = ?', [uid], (err, results) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    }
+    if (results.length === 0) {
+      // UID не найден в таблице
+      res.status(404).json({ error: 'UID not found' });
+      return;
+    }
+    const license = results[0];
+    if (!license.is_active || new Date(license.expiration_date) < new Date()) {
+      // Лицензия не активна или истек срок ее действия
+      res.status(403).json({ error: 'License is not active or has expired' });
+      return;
+    }
+    // UID и лицензия действительны
     res.json({ message: 'UID and license are valid' });
   });
 });
@@ -1383,7 +1450,6 @@ app.get('/getAvatar/:userId', (req, res) => {
     res.status(200).json({ avatarUrl }); // Возвращаем URL аватара в качестве ответа
   });
 });
-
 
 app.get('/user/:userId', (req, res) => {
   const userId = req.params.userId;
