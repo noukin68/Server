@@ -1190,6 +1190,7 @@ app.post('/purchaseLicense', (req, res) => {
     return res.status(400).json({ error: 'Пожалуйста, выберите тарифный план' });
   }
 
+
   // Если userId не определен, возвращаем ошибку
   if (!userId) {
     return res.status(401).json({ error: 'Пользователь не аутентифицирован' });
@@ -1221,8 +1222,8 @@ app.post('/purchaseLicense', (req, res) => {
 
     // Добавление новой лицензии в базу данных
     db.query(
-      'INSERT INTO licenses (user_id, uid, expiration_date) VALUES (?, ?, ?)',
-      [userId, uid, licenseExpirationDate.format('YYYY-MM-DD')],
+      'INSERT INTO licenses (user_id, uid) VALUES (?, ?)',
+      [userId, uid],
       (err, results) => {
         if (err) {
           console.error(err);
