@@ -1187,9 +1187,10 @@ app.post('/purchaseLicense', (req, res) => {
 
   // Проверка наличия всех необходимых данных о карте, userId и выбранном плане
   if (!userId || selectedPlanIndex === undefined) {
-    return res.status(400).json({ error: 'Пожалуйста, выберите тарифный план' });
+    return res.status(400).json({ error: 'Пожалуйста, заполните все поля карты, userId и выберите тарифный план' });
   }
 
+  // Здесь должна быть логика проверки данных карты (например, валидация номера карты, проверка срока действия и т. д.)
 
   // Если userId не определен, возвращаем ошибку
   if (!userId) {
@@ -1222,8 +1223,8 @@ app.post('/purchaseLicense', (req, res) => {
 
     // Добавление новой лицензии в базу данных
     db.query(
-      'INSERT INTO licenses (user_id, uid) VALUES (?, ?)',
-      [userId, uid],
+      'INSERT INTO licenses (user_id, uid, expiration_date) VALUES (?, ?, ?)',
+      [userId, uid, licenseExpirationDate.format('YYYY-MM-DD')],
       (err, results) => {
         if (err) {
           console.error(err);
