@@ -1033,29 +1033,27 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Обработчик события 'restart-timer'
-socket.on('restart-timer', () => {
-  console.log('Запрос на перезапуск таймера');
-  const uid = socket.uid; // Получаем uid из объекта socket
-  if (!uid || !io.sockets.adapter.rooms.has(uid)) {
-      socket.emit('error', 'UID not found');
-      return;
-  }
-  if (!timerStopped) {
-      const timeInSeconds = clients[uid].timeInSeconds;
-      io.to(uid).emit('time-received', { uid, timeInSeconds });
-  }
-});
+  socket.on('restart-timer', () => {
+    console.log('Запрос на перезапуск таймера');
+    if (!io.sockets.adapter.rooms.has(socket.uid)) {
+        socket.emit('error', 'UID not found');
+        return;
+    }
+    if(!timerStopped){
+      io.to(socket.uid).emit('time-received', { uid: socket.uid, timeInSeconds: clients[socket.uid].timeInSeconds });
+    }
+  });
 
-// Обработчик события 'restart-time'
-socket.on('restart-time', ({ uid: targetUid, timeInSeconds }) => {
-  console.log('Получено событие перезапуска времени для UID:', targetUid);
-  if (!targetUid || !io.sockets.adapter.rooms.has(targetUid)) {
+  socket.on('restart-time', ({ uid: targetUid, timeInSeconds}) => {
+    if (!io.sockets.adapter.rooms.has(targetUid)) {
       socket.emit('error', 'UID not found');
       return;
-  }
-  io.to(targetUid).emit('restart-time', { uid: targetUid, timeInSeconds });
-});
+    }
+    if (socket.uid !== targetUid) {
+
+      io.to(targetUid).emit('restart-time', { uid: targetUid, timeInSeconds});
+    }
+  });
 
 
   socket.on('process-data', ({ uid: targetUid, processes }) => {
@@ -1180,19 +1178,17 @@ app.post('/check-uid-license', (req, res) => {
 const moment = require('moment');
 
 app.post('/purchaseLicense', (req, res) => {
-  const { cardNumber, expirationDate, cvv, userId, selectedPlanIndex } = req.body;
+  const {userId, selectedPlanIndex } = req.body;
   const tariffPlans = [
-    { title: 'Базовый', description: 'Описание базового плана', days: 30, price: 450 },
-    { title: 'Стандартный', description: 'Описание стандартного плана', days: 90, price: 1350 },
-    { title: 'Премиум', description: 'Описание премиум плана', days: 365, price: 5400 },
+    { title: 'Базовый', days: 30, price: 450 },
+    { title: 'Стандартный', days: 90, price: 1350 },
+    { title: 'Премиум', days: 365, price: 5400 },
   ];
 
   // Проверка наличия всех необходимых данных о карте, userId и выбранном плане
-  if (!cardNumber || !expirationDate || !cvv || !userId || selectedPlanIndex === undefined) {
-    return res.status(400).json({ error: 'Пожалуйста, заполните все поля карты, userId и выберите тарифный план' });
+  if (!userId || selectedPlanIndex === undefined) {
+    return res.status(400).json({ error: 'Пожалуйста, выберите тарифный план' });
   }
-
-  // Здесь должна быть логика проверки данных карты (например, валидация номера карты, проверка срока действия и т. д.)
 
   // Если userId не определен, возвращаем ошибку
   if (!userId) {
