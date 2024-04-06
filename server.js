@@ -1419,7 +1419,7 @@ app.get('/licenseStatus/:userId', (req, res) => {
   db.query('SELECT * FROM licenses WHERE user_id = ? AND is_active = true', userId, (err, results) => {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: 'Ошибка при проверке статуса лицензии' });
+      return res.status(500).json({ error: 'Ошибк при проверке статуса лицензии' });
     }
 
     if (results.length === 0) {
