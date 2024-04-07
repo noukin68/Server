@@ -1536,16 +1536,15 @@ const transporter = nodemailer.createTransport({
 
 app.post('/sendEmailVerificationCode', async (req, res) => {
   const { email } = req.body;
-
   if (!email) {
     return res.status(400).json({ error: 'Email не указан' });
   }
 
   try {
-    // Проверяем, существует ли email в таблице users
-    const existingUser = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (existingUser.length > 0) {
-      return res.status(400).json({ error: 'Email уже существует' });
+    // Проверяем, существует ли email в таблице users и подтвержден ли он
+    const verifiedEmail = await db.query('SELECT * FROM users WHERE email = ? AND email_verified = true', [email]);
+    if (verifiedEmail.length > 0) {
+      return res.status(400).json({ error: 'Email уже подтвержден' });
     }
 
     // Проверяем, существует ли email в таблице email_verification
@@ -1608,6 +1607,7 @@ app.post('/verifyEmail', async (req, res) => {
     return res.status(500).json({ error: 'Ошибка подтверждения email' });
   }
 });
+
 
 
 server.listen(port, () => {
