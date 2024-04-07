@@ -1547,8 +1547,8 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
       return res.status(400).json({ error: 'Email уже подтвержден' });
     }
 
-    // Проверяем, существует ли email в таблице email_verification
-    const existingEmail = await db.query('SELECT * FROM email_verification WHERE email = ?', [email]);
+    // Проверяем, существует ли email в таблице users
+    const existingEmail = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (existingEmail.length > 0) {
       return res.status(400).json({ error: 'Email уже существует' });
     }
@@ -1572,6 +1572,7 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
     return res.status(500).json({ error: 'Ошибка отправки кода подтверждения' });
   }
 });
+
 
 app.post('/verifyEmail', async (req, res) => {
   const { email, code } = req.body;
