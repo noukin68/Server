@@ -1584,9 +1584,6 @@ app.post('/verifyEmail', async (req, res) => {
       return res.status(400).json({ error: 'Неверный код подтверждения' });
     }
 
-    // Удаление кода подтверждения из базы данных
-    await db.query('DELETE FROM email_verification WHERE email = ? AND code = ?', [email, code]);
-
     // Обновление статуса подтверждения email в таблице users
     await db.query('UPDATE users SET email_verified = true WHERE email = ?', [email]);
 
