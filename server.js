@@ -1541,6 +1541,12 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
   }
 
   try {
+    // Проверяем, существует ли email в таблице users и подтвержден ли он
+    const verifiedEmail = await db.query('SELECT * FROM users WHERE email = ? AND email_verified = true', [email]);
+    if (verifiedEmail.length > 0) {
+      return res.status(400).json({ error: 'Email уже подтвержден' });
+    }
+
     // Проверяем, существует ли email в таблице email_verification
     const existingEmail = await db.query('SELECT * FROM email_verification WHERE email = ?', [email]);
     if (existingEmail.length > 0) {
@@ -1584,6 +1590,9 @@ app.post('/verifyEmail', async (req, res) => {
       return res.status(400).json({ error: 'Неверный код подтверждения' });
     }
 
+    // Удаление кода подтверждения из базы данных
+    await db.query('DELETE FROM email_verification WHERE email = ? AND code = ?', [email, code]);
+
     // Обновление статуса подтверждения email в таблице users
     await db.query('UPDATE users SET email_verified = true WHERE email = ?', [email]);
 
@@ -1593,6 +1602,7 @@ app.post('/verifyEmail', async (req, res) => {
     return res.status(500).json({ error: 'Ошибка подтверждения email' });
   }
 });
+
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
