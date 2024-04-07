@@ -1557,15 +1557,14 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
 
     await db.query('INSERT INTO email_verification (email, code) VALUES (?, ?)', [email, verificationCode]);
 
-    const mailOptions = {
-      from: 'noukin68@mail.ru',
-      to: email,
-      subject: 'Код подтверждения электронной почты',
-      text: `Ваш код подтверждения: ${verificationCode}`
-    };
-
-    // Отправляем код только если email не существует в таблице users
     if (!existingEmail.length) {
+      const mailOptions = {
+        from: 'noukin68@mail.ru',
+        to: email,
+        subject: 'Код подтверждения электронной почты',
+        text: `Ваш код подтверждения: ${verificationCode}`
+      };
+
       await transporter.sendMail(mailOptions);
     }
 
