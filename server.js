@@ -1564,7 +1564,10 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
       text: `Ваш код подтверждения: ${verificationCode}`
     };
 
-    await transporter.sendMail(mailOptions);
+    // Отправляем код только если email не существует в таблице users
+    if (!existingEmail.length) {
+      await transporter.sendMail(mailOptions);
+    }
 
     return res.status(200).json({ message: 'Код подтверждения отправлен' });
   } catch (error) {
@@ -1572,7 +1575,6 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
     return res.status(500).json({ error: 'Ошибка отправки кода подтверждения' });
   }
 });
-
 
 app.post('/verifyEmail', async (req, res) => {
   const { email, code } = req.body;
