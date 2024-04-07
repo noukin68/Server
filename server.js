@@ -1605,6 +1605,21 @@ app.post('/verifyEmail', async (req, res) => {
   }
 });
 
+app.post('/checkEmailExists', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email не указан' });
+  }
+
+  try {
+    const existingEmail = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    res.status(200).json({ exists: existingEmail.length > 0 });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Ошибка проверки email' });
+  }
+});
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
