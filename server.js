@@ -1609,6 +1609,16 @@ app.post('/verifyEmail', async (req, res) => {
   }
 });
 
+app.get('/checkEmailExists', async (req, res) => {
+  const { email } = req.query;
+  try {
+    const [rows, _] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    res.json({ exists: rows.length > 0 });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Ошибка проверки email' });
+  }
+});
 
 
 server.listen(port, () => {
