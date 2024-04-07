@@ -1585,20 +1585,15 @@ app.post('/verifyEmail', async (req, res) => {
 
   try {
     // Получение кода подтверждения из базы данных
-    const verification = await db.query('SELECT * FROM email_verification WHERE email = ?', [email]);
-
-    // Проверка наличия кода подтверждения в базе данных
-    if (verification.length === 0) {
-      return res.status(400).json({ error: 'Код подтверждения не найден' });
-    }
+    const verification = await db.query('SELECT * FROM email_verification WHERE email = ? AND code = ?', [email, code]);
 
     // Проверка корректности кода подтверждения
-    if (verification.length === 0 || verification[0].code != code) {
+    if (verification.length === 0) {
       return res.status(400).json({ error: 'Неверный код подтверждения' });
-     }
+    }
 
     // Удаление кода подтверждения из базы данных
-    await db.query('DELETE FROM email_verification WHERE email = ?', [email]);
+    await db.query('DELETE FROM email_verification WHERE email = ? AND code = ?', [email, code]);
 
     // Обновление статуса подтверждения email в таблице users
     await db.query('UPDATE users SET email_verified = true WHERE email = ?', [email]);
@@ -1609,7 +1604,6 @@ app.post('/verifyEmail', async (req, res) => {
     return res.status(500).json({ error: 'Ошибка подтверждения email' });
   }
 });
-
 
 app.post('/checkEmailExists', async (req, res) => {
   const { email } = req.body;
