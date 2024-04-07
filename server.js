@@ -1593,9 +1593,9 @@ app.post('/verifyEmail', async (req, res) => {
     }
 
     // Проверка корректности кода подтверждения
-    if (verification[0].code !== parseInt(code)) {
+    if (verification.length === 0 || verification[0].code != code) {
       return res.status(400).json({ error: 'Неверный код подтверждения' });
-    }
+     }
 
     // Удаление кода подтверждения из базы данных
     await db.query('DELETE FROM email_verification WHERE email = ?', [email]);
