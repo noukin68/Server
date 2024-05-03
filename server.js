@@ -1679,17 +1679,33 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
 		}
 
 		// Генерируем уникальный код подтверждения для email
-		const verificationCode = Math.floor(1000 + Math.random() * 9000)
+		const verificationCode = uuidv4()
 
-		// Сохраняем код подтверждения в базе данных
+		// Хэшируем код подтверждения
+		const verificationCodeHash = crypto
+			.createHmac('sha256', process.env.EMAIL_VERIFICATION_SECRET)
+			.update(verificationCode)
+			.digest('hex')
+
+		// Сохраняем хэш кода подтверждения в базе данных
 		await db.query(
 			'INSERT INTO email_verification (email, code) VALUES (?, ?)',
-			[email, verificationCode]
+			[email, verificationCodeHash]
 		)
 
 		// Отправляем код подтверждения на email
+		const transporter = nodemailer.createTransport({
+			host: process.env.SMTP_HOST,
+			port: process.env.SMTP_PORT,
+			secure: process.env.SMTP_SECURE,
+			auth: {
+				user: process.env.SMTP_USER,
+				pass: process.env.SMTP_PASS,
+			},
+		})
+
 		const mailOptions = {
-			from: 'noukin68@mail.ru',
+			from: process.env.SMTP_FROM,
 			to: email,
 			subject: 'Код подтверждения электронной почты',
 			text: `Ваш код подтверждения: ${verificationCode}`,
@@ -1713,22 +1729,26 @@ app.post('/verifyEmail', async (req, res) => {
 	}
 
 	try {
-		// Получение кода подтверждения из базы данных
+		// Получение хэша кода подтверждения из базы данных
 		const verification = await db.query(
-			'SELECT * FROM email_verification WHERE email = ? AND code = ?',
-			[email, code]
+			'SELECT * FROM email_verification WHERE email = ?',
+			[email]
 		)
 
 		// Проверка корректности кода подтверждения
-		if (verification.length === 0 || verification[0].code !== parseInt(code)) {
+		if (
+			verification.length === 0 ||
+			verification[0].code !==
+				crypto
+					.createHmac('sha256', process.env.EMAIL_VERIFICATION_SECRET)
+					.update(code)
+					.digest('hex')
+		) {
 			return res.status(400).json({ error: 'Неверный код подтверждения' })
 		}
 
 		// Удаление кода подтверждения из базы данных
-		await db.query(
-			'DELETE FROM email_verification WHERE email = ? AND code = ?',
-			[email, code]
-		)
+		await db.query('DELETE FROM email_verification WHERE email = ?', [email])
 
 		// Обновление статуса подтверждения email в таблице users
 		await db.query('UPDATE users SET email_verified = true WHERE email = ?', [
