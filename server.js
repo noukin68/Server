@@ -1654,6 +1654,7 @@ const transporter = nodemailer.createTransport({
 
 app.post('/sendEmailVerificationCode', async (req, res) => {
 	const { email } = req.body
+
 	if (!email) {
 		return res.status(400).json({ error: 'Email не указан' })
 	}
@@ -1677,28 +1678,29 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
 			return res.status(400).json({ error: 'Email уже существует' })
 		}
 
-		const verificationCode = Math.floor(100000 + Math.random() * 900000)
+		// Генерируем уникальный код подтверждения для email
+		const verificationCode = crypto.randomBytes(3).toString('hex')
 
+		// Сохраняем код подтверждения в базе данных
 		await db.query(
 			'INSERT INTO email_verification (email, code) VALUES (?, ?)',
 			[email, verificationCode]
 		)
 
-		if (!existingEmail.length) {
-			const mailOptions = {
-				from: 'noukin68@mail.ru',
-				to: email,
-				subject: 'Код подтверждения электронной почты',
-				text: `Ваш код подтверждения: ${verificationCode}`,
-			}
-
-			await transporter.sendMail(mailOptions)
+		// Отправляем код подтверждения на email
+		const mailOptions = {
+			from: 'noukin68@mail.ru',
+			to: email,
+			subject: 'Код подтверждения электронной почты',
+			text: `Ваш код подтверждения: ${verificationCode}`,
 		}
 
-		return res.status(200).json({ message: 'Код подтверждения отправлен' })
+		await transporter.sendMail(mailOptions)
+
+		res.status(200).json({ message: 'Код подтверждения отправлен' })
 	} catch (error) {
 		console.error(error)
-		return res.status(500).json({ error: 'Ошибка отправки кода подтверждения' })
+		res.status(500).json({ error: 'Ошибка отправки кода подтверждения' })
 	}
 })
 
@@ -1713,21 +1715,12 @@ app.post('/verifyEmail', async (req, res) => {
 	try {
 		// Получение кода подтверждения из базы данных
 		const verification = await db.query(
-			'SELECT * FROM email_verification WHERE email = ?',
-			[email]
-		)
-
-		// Проверка корректности кода подтверждения
-		if (verification.length === 0 || verification[0].code !== parseInt(code)) {
-			return res.status(400).json({ error: 'Неверный код подтверждения' })
-		}
-
-		// Проверка, что код подтверждения действителен, прежде чем удалять его
-		const validVerification = await db.query(
 			'SELECT * FROM email_verification WHERE email = ? AND code = ?',
 			[email, code]
 		)
-		if (validVerification.length === 0) {
+
+		// Проверка корректности кода подтверждения
+		if (verification.length === 0) {
 			return res.status(400).json({ error: 'Неверный код подтверждения' })
 		}
 
