@@ -1679,7 +1679,7 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
 		}
 
 		// Генерируем уникальный код подтверждения для email
-		const verificationCode = crypto.randomBytes(3).toString('hex')
+		const verificationCode = Math.floor(1000 + Math.random() * 9000)
 
 		// Сохраняем код подтверждения в базе данных
 		await db.query(
