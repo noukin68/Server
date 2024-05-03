@@ -86,9 +86,11 @@ app.post('/login', (req, res) => {
 			}
 
 			if (results.length === 0) {
-				return res.status(401).json({
-					message: 'Неверные учетные данные или не являетесь администратором',
-				})
+				return res
+					.status(401)
+					.json({
+						message: 'Неверные учетные данные или не являетесь администратором',
+					})
 			}
 
 			// Авторизация успешна
@@ -309,9 +311,12 @@ app.post('/admin/requests/:requestId/approve', (req, res) => {
 					return res.status(500).json({ message: 'Ошибка сервера' })
 				}
 
-				res.status(200).json({
-					message: 'Request approved. Student status updated. Request deleted.',
-				})
+				res
+					.status(200)
+					.json({
+						message:
+							'Request approved. Student status updated. Request deleted.',
+					})
 			}
 		)
 	})
@@ -348,9 +353,12 @@ app.post('/admin/requests/:requestId/reject', (req, res) => {
 					return res.status(500).json({ message: 'Ошибка сервера' })
 				}
 
-				res.status(200).json({
-					message: 'Request rejected. Student status updated. Request deleted.',
-				})
+				res
+					.status(200)
+					.json({
+						message:
+							'Request rejected. Student status updated. Request deleted.',
+					})
 			}
 		)
 	})
@@ -926,9 +934,11 @@ app.post('/loginPhone', (req, res) => {
 
 			// Если пользователь не найден, возвращаем сообщение о регистрации
 			if (results.length === 0) {
-				return res.status(401).json({
-					message: 'Пользователь не найден. Пожалуйста, зарегистрируйтесь.',
-				})
+				return res
+					.status(401)
+					.json({
+						message: 'Пользователь не найден. Пожалуйста, зарегистрируйтесь.',
+					})
 			}
 
 			// Вход пользователя
@@ -1336,10 +1346,12 @@ app.post('/purchaseLicense', (req, res) => {
 
 	// Проверка наличия всех необходимых данных о карте, userId и выбранном плане
 	if (!userId || selectedPlanIndex === undefined) {
-		return res.status(400).json({
-			error:
-				'Пожалуйста, заполните все поля карты, userId и выберите тарифный план',
-		})
+		return res
+			.status(400)
+			.json({
+				error:
+					'Пожалуйста, заполните все поля карты, userId и выберите тарифный план',
+			})
 	}
 
 	// Здесь должна быть логика проверки данных карты (например, валидация номера карты, проверка срока действия и т. д.)
@@ -1425,9 +1437,12 @@ app.post('/renewLicense', (req, res) => {
 
 	// Проверка наличия всех необходимых данных о карте, userId и selectedPlanIndex
 	if (!userId || selectedPlanIndex === undefined) {
-		return res.status(400).json({
-			error: 'Пожалуйста, заполните все поля карты, userId и selectedPlanIndex',
-		})
+		return res
+			.status(400)
+			.json({
+				error:
+					'Пожалуйста, заполните все поля карты, userId и selectedPlanIndex',
+			})
 	}
 
 	// Определение массива тарифных планов
@@ -1447,9 +1462,11 @@ app.post('/renewLicense', (req, res) => {
 		(err, results) => {
 			if (err) {
 				console.error(err)
-				return res.status(500).json({
-					error: 'Ошибка при получении информации о лицензии пользователя',
-				})
+				return res
+					.status(500)
+					.json({
+						error: 'Ошибка при получении информации о лицензии пользователя',
+					})
 			}
 
 			if (results.length === 0) {
@@ -1478,10 +1495,12 @@ app.post('/renewLicense', (req, res) => {
 					}
 
 					// Возвращение информации о продленной лицензии
-					return res.status(200).json({
-						message: 'Лицензия успешно продлена',
-						expiration_date: newExpirationDate.format('YYYY-MM-DD'),
-					})
+					return res
+						.status(200)
+						.json({
+							message: 'Лицензия успешно продлена',
+							expiration_date: newExpirationDate.format('YYYY-MM-DD'),
+						})
 				}
 			)
 		}
@@ -1654,7 +1673,6 @@ const transporter = nodemailer.createTransport({
 
 app.post('/sendEmailVerificationCode', async (req, res) => {
 	const { email } = req.body
-
 	if (!email) {
 		return res.status(400).json({ error: 'Email не указан' })
 	}
@@ -1678,29 +1696,28 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
 			return res.status(400).json({ error: 'Email уже существует' })
 		}
 
-		// Генерируем уникальный код подтверждения для email
-		const verificationCode = Math.floor(1000 + Math.random() * 9000)
+		const verificationCode = Math.floor(100000 + Math.random() * 900000)
 
-		// Сохраняем код подтверждения в базе данных
 		await db.query(
 			'INSERT INTO email_verification (email, code) VALUES (?, ?)',
 			[email, verificationCode]
 		)
 
-		// Отправляем код подтверждения на email
-		const mailOptions = {
-			from: 'noukin68@mail.ru',
-			to: email,
-			subject: 'Код подтверждения электронной почты',
-			text: `Ваш код подтверждения: ${verificationCode}`,
+		if (!existingEmail.length) {
+			const mailOptions = {
+				from: 'noukin68@mail.ru',
+				to: email,
+				subject: 'Код подтверждения электронной почты',
+				text: `Ваш код подтверждения: ${verificationCode}`,
+			}
+
+			await transporter.sendMail(mailOptions)
 		}
 
-		await transporter.sendMail(mailOptions)
-
-		res.status(200).json({ message: 'Код подтверждения отправлен' })
+		return res.status(200).json({ message: 'Код подтверждения отправлен' })
 	} catch (error) {
 		console.error(error)
-		res.status(500).json({ error: 'Ошибка отправки кода подтверждения' })
+		return res.status(500).json({ error: 'Ошибка отправки кода подтверждения' })
 	}
 })
 
@@ -1715,12 +1732,12 @@ app.post('/verifyEmail', async (req, res) => {
 	try {
 		// Получение кода подтверждения из базы данных
 		const verification = await db.query(
-			'SELECT * FROM email_verification WHERE email = ?',
-			[email]
+			'SELECT * FROM email_verification WHERE email = ? AND code = ?',
+			[email, code]
 		)
 
 		// Проверка корректности кода подтверждения
-		if (verification.length === 0 || verification[0].code !== parseInt(code)) {
+		if (verification.length === 0) {
 			return res.status(400).json({ error: 'Неверный код подтверждения' })
 		}
 
