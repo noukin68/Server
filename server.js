@@ -1670,11 +1670,23 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
 
 		const verificationCode = Math.floor(100000 + Math.random() * 900000)
 
-		// Заменяем или вставляем новую запись с новым кодом подтверждения
-		await db.query(
-			'REPLACE INTO email_verification (email, code) VALUES (?, ?)',
-			[email, verificationCode]
-		)
+		// Вставляем новую запись с новым кодом подтверждения
+		try {
+			await db.query(
+				'INSERT INTO email_verification (email, code) VALUES (?, ?)',
+				[email, verificationCode]
+			)
+		} catch (err) {
+			if (err.code === 'ER_DUP_ENTRY') {
+				// Если запись существует, обновляем код подтверждения
+				await db.query(
+					'UPDATE email_verification SET code = ? WHERE email = ?',
+					[verificationCode, email]
+				)
+			} else {
+				throw err
+			}
+		}
 
 		const mailOptions = {
 			from: 'noukin68@mail.ru',
