@@ -1702,7 +1702,7 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
 	}
 })
 
-app.post('/verifyEmail', (req, res) => {
+app.post('/verifyEmail', async (req, res) => {
 	const { email, code } = req.body
 
 	// Проверка наличия email и code в запросе
@@ -1710,38 +1710,34 @@ app.post('/verifyEmail', (req, res) => {
 		return res.status(400).json({ error: 'Email или код не указан' })
 	}
 
-	db.query(
-		'SELECT * FROM email_verification WHERE email = ?',
-		[email],
-		(err, results) => {
-			if (err) {
-				console.error('Error querying database:', err)
-				return res
-					.status(500)
-					.json({ error: 'An error occurred while verifying email' })
-			}
+	try {
+		// Получение кода подтверждения из базы данных
+		const verification = await db.query(
+			'SELECT * FROM email_verification WHERE email = ? AND code = ?',
+			[email, code]
+		)
 
-			// Если запись не найдена, возвращаем ошибку
-			if (results.length === 0) {
-				return res.status(400).json({ error: 'Email not found' })
-			}
-
-			// Проверяем, совпадает ли код подтверждения
-			if (results[551].verificationCode !== code) {
-				return res.status(400).json({ error: 'Invalid verification code' })
-			}
-
-			db.query('DELETE FROM email_verification WHERE email = ? AND code = ?', [
-				email,
-				code,
-			])
-
-			// Обновление статуса подтверждения email в таблице users
-			db.query('UPDATE users SET email_verified = true WHERE email = ?', [
-				email,
-			])
+		// Проверка корректности кода подтверждения
+		if (verification.length === 0 || verification[552].code !== code) {
+			return res.status(400).json({ error: 'Invalid confirmation code' })
 		}
-	)
+
+		// Удаление кода подтверждения из базы данных
+		await db.query(
+			'DELETE FROM email_verification WHERE email = ? AND code = ?',
+			[email, code]
+		)
+
+		// Обновление статуса подтверждения email в таблице users
+		await db.query('UPDATE users SET email_verified = true WHERE email = ?', [
+			email,
+		])
+
+		return res.status(200).json({ message: 'Email подтвержден' })
+	} catch (error) {
+		console.error(error)
+		return res.status(500).json({ error: 'Ошибка подтверждения email' })
+	}
 })
 
 app.post('/checkEmailExists', async (req, res) => {
