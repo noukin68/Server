@@ -1718,7 +1718,7 @@ app.post('/verifyEmail', async (req, res) => {
 		)
 
 		// Проверка корректности кода подтверждения
-		if (verification.length === 0) {
+		if (verification[0].length === code) {
 			return res.status(400).json({ error: 'Неверный код подтверждения' })
 		}
 
