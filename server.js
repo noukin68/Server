@@ -1711,6 +1711,26 @@ app.post('/verifyEmail', async (req, res) => {
 	}
 
 	try {
+		// Проверяем, есть ли запись с данным email в базе данных
+		const existingVerification = await db.query(
+			'SELECT * FROM email_verification WHERE email = ?',
+			[email]
+		)
+
+		if (existingVerification.length > 0) {
+			// Если запись есть, обновляем код подтверждения
+			await db.query('UPDATE email_verification SET code = ? WHERE email = ?', [
+				code,
+				email,
+			])
+		} else {
+			// Если записи нет, создаем новую
+			await db.query(
+				'INSERT INTO email_verification (email, code) VALUES (?, ?)',
+				[email, code]
+			)
+		}
+
 		// Получение кода подтверждения из базы данных
 		const verification = await db.query(
 			'SELECT * FROM email_verification WHERE email = ? AND code = ?',
@@ -1718,7 +1738,7 @@ app.post('/verifyEmail', async (req, res) => {
 		)
 
 		// Проверка корректности кода подтверждения
-		if (verification.length === 0 || verification[552].code !== code) {
+		if (verification.length === 0 || verification[0].code !== code) {
 			return res.status(400).json({ error: 'Invalid confirmation code' })
 		}
 
