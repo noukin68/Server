@@ -1740,8 +1740,6 @@ app.post('/verifyEmail', (req, res) => {
 			db.query('UPDATE users SET email_verified = true WHERE email = ?', [
 				email,
 			])
-
-			return res.status(200).json({ message: 'Email подтвержден' })
 		}
 	)
 })
