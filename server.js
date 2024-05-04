@@ -1668,33 +1668,37 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
 			return res.status(400).json({ error: 'Email уже подтвержден' })
 		}
 
-		// Проверяем, существует ли email в таблице users
-		const existingEmail = await db.query(
-			'SELECT * FROM users WHERE email = ?',
+		// Получаем существующую запись в таблице email_verification
+		const existingVerification = await db.query(
+			'SELECT * FROM email_verification WHERE email = ?',
 			[email]
 		)
-		if (existingEmail.length > 0) {
-			// Если email существует, удаляем предыдущий код подтверждения
-			await db.query('DELETE FROM email_verification WHERE email = ?', [email])
+
+		let verificationCode
+		if (existingVerification.length > 0) {
+			// Если запись существует, обновляем код подтверждения
+			verificationCode = Math.floor(100000 + Math.random() * 900000)
+			await db.query('UPDATE email_verification SET code = ? WHERE email = ?', [
+				verificationCode,
+				email,
+			])
+		} else {
+			// Если записи нет, создаем новую
+			verificationCode = Math.floor(100000 + Math.random() * 900000)
+			await db.query(
+				'INSERT INTO email_verification (email, code) VALUES (?, ?)',
+				[email, verificationCode]
+			)
 		}
 
-		const verificationCode = Math.floor(100000 + Math.random() * 900000)
-
-		await db.query(
-			'INSERT INTO email_verification (email, code) VALUES (?, ?)',
-			[email, verificationCode]
-		)
-
-		if (!existingEmail.length) {
-			const mailOptions = {
-				from: 'noukin68@mail.ru',
-				to: email,
-				subject: 'Код подтверждения электронной почты',
-				text: `Ваш код подтверждения: ${verificationCode}`,
-			}
-
-			await transporter.sendMail(mailOptions)
+		const mailOptions = {
+			from: 'noukin68@mail.ru',
+			to: email,
+			subject: 'Код подтверждения электронной почты',
+			text: `Ваш код подтверждения: ${verificationCode}`,
 		}
+
+		await transporter.sendMail(mailOptions)
 
 		return res.status(200).json({ message: 'Код подтверждения отправлен' })
 	} catch (error) {
