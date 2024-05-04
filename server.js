@@ -1674,7 +1674,8 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
 			[email]
 		)
 		if (existingEmail.length > 0) {
-			return res.status(400).json({ error: 'Email уже существует' })
+			// Если email существует, удаляем предыдущий код подтверждения
+			await db.query('DELETE FROM email_verification WHERE email = ?', [email])
 		}
 
 		const verificationCode = Math.floor(100000 + Math.random() * 900000)
@@ -1711,26 +1712,6 @@ app.post('/verifyEmail', async (req, res) => {
 	}
 
 	try {
-		// Проверяем, есть ли запись с данным email в базе данных
-		const existingVerification = await db.query(
-			'SELECT * FROM email_verification WHERE email = ?',
-			[email]
-		)
-
-		if (existingVerification.length > 0) {
-			// Если запись есть, обновляем код подтверждения
-			await db.query('UPDATE email_verification SET code = ? WHERE email = ?', [
-				code,
-				email,
-			])
-		} else {
-			// Если записи нет, создаем новую
-			await db.query(
-				'INSERT INTO email_verification (email, code) VALUES (?, ?)',
-				[email, code]
-			)
-		}
-
 		// Получение кода подтверждения из базы данных
 		const verification = await db.query(
 			'SELECT * FROM email_verification WHERE email = ? AND code = ?',
