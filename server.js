@@ -1748,11 +1748,23 @@ app.post('/checkEmailExists', async (req, res) => {
 	}
 
 	try {
+		// Проверяем, существует ли email в таблице users
 		const existingEmail = await db.query(
 			'SELECT * FROM users WHERE email = ?',
 			[email]
 		)
-		res.status(200).json({ exists: existingEmail.length > 0 })
+
+		// Проверяем, существует ли email в таблице email_verification
+		const verificationEmail = await db.query(
+			'SELECT * FROM email_verification WHERE email = ?',
+			[email]
+		)
+
+		// Возвращаем объект с информацией о существовании email
+		res.status(200).json({
+			exists: existingEmail.length > 0,
+			inVerification: verificationEmail.length > 0,
+		})
 	} catch (error) {
 		console.error(error)
 		return res.status(500).json({ error: 'Ошибка проверки email' })
