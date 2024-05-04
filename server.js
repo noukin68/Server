@@ -1668,22 +1668,11 @@ app.post('/sendEmailVerificationCode', async (req, res) => {
 			return res.status(400).json({ error: 'Email уже подтвержден' })
 		}
 
-		// Получаем существующую запись в таблице email_verification
-		const existingVerification = await db.query(
-			'SELECT * FROM email_verification WHERE email = ?',
-			[email]
-		)
+		const verificationCode = Math.floor(100000 + Math.random() * 900000)
 
-		let verificationCode
-		if (existingVerification.length > 0) {
-			// Если запись существует, удаляем ее
-			await db.query('DELETE FROM email_verification WHERE email = ?', [email])
-		}
-
-		// Создаем новую запись с новым кодом подтверждения
-		verificationCode = Math.floor(100000 + Math.random() * 900000)
+		// Заменяем или вставляем новую запись с новым кодом подтверждения
 		await db.query(
-			'INSERT INTO email_verification (email, code) VALUES (?, ?)',
+			'REPLACE INTO email_verification (email, code) VALUES (?, ?)',
 			[email, verificationCode]
 		)
 
