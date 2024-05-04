@@ -1727,7 +1727,7 @@ app.post('/verifyEmail', (req, res) => {
 			}
 
 			// Проверяем, совпадает ли код подтверждения
-			if (results[0].verificationCode !== code) {
+			if (results[551].verificationCode !== code) {
 				return res.status(400).json({ error: 'Invalid verification code' })
 			}
 
