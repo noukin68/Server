@@ -1,7 +1,7 @@
 const express = require('express')
 const mysql = require('mysql')
 const cors = require('cors')
-const https = require('https')
+const http = require('http')
 const socketIo = require('socket.io')
 const bcrypt = require('bcrypt')
 const { v4: uuidv4 } = require('uuid')
@@ -22,14 +22,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage })
 
 const app = express()
-const server = https.createServer(
-	{
-		key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
-		cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
-	},
-	app
-)
-
+const server = http.createServer(app)
 const io = socketIo(server)
 
 const port = 3000
@@ -50,16 +43,10 @@ db.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
 app.use('/uploads', cors(), express.static('uploads'))
 app.use(cors())
 app.use(express.json())
-app.use(function (req, res, next) {
+app.use((req, res, next) => {
 	res.setHeader('Access-Control-Allow-Origin', '*')
-	res.setHeader(
-		'Access-Control-Allow-Methods',
-		'GET, POST, PUT, DELETE, HEAD,OPTIONS'
-	)
-	res.setHeader(
-		'Access-Control-Allow-Headers',
-		'Content-Type, Authorization,  X-Requested-With, Origin, Accept, x-client-key, x-client-token, x-client-secret'
-	)
+	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
+	res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 	next()
 })
 
@@ -1338,7 +1325,6 @@ app.post('/check-uid-license-wpf', (req, res) => {
 })
 
 const moment = require('moment')
-const path = require('path')
 
 app.post('/purchaseLicense', (req, res) => {
 	const { userId, selectedPlanIndex } = req.body
