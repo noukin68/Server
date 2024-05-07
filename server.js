@@ -1,7 +1,7 @@
 const express = require('express')
 const mysql = require('mysql')
 const cors = require('cors')
-const http = require('http')
+const https = require('https')
 const socketIo = require('socket.io')
 const bcrypt = require('bcrypt')
 const { v4: uuidv4 } = require('uuid')
@@ -22,7 +22,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage })
 
 const app = express()
-const server = http.createServer(app)
+const server = https.createServer(
+	{
+		key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+		cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
+	},
+	app
+)
+
 const io = socketIo(server)
 
 const port = 3000
@@ -1325,6 +1332,7 @@ app.post('/check-uid-license-wpf', (req, res) => {
 })
 
 const moment = require('moment')
+const path = require('path')
 
 app.post('/purchaseLicense', (req, res) => {
 	const { userId, selectedPlanIndex } = req.body
