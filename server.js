@@ -22,10 +22,17 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage })
 
 const app = express()
+/*const server = https.createServer(
+	{
+		key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+		cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
+	},
+	app
+)*/
 const server = http.createServer(app)
 const io = socketIo(server)
 
-const port = 3000
+const port = 443
 
 const db = mysql.createPool({
 	connectionLimit: 10,
