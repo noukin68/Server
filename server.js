@@ -48,17 +48,18 @@ db.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
 })
 
 app.use('/uploads', cors(), express.static('uploads'))
-app.use(
-	cors({
-		origin: ['https://techproguide.ru'],
-		credentials: true,
-	})
-)
+app.use(cors())
 app.use(express.json())
 app.use((req, res, next) => {
-	res.setHeader('Access-Control-Allow-Origin', '*')
-	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
-	res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+	res.setHeader('Access-Control-Allow-Origin', 'https://techproguide.ru')
+	res.setHeader(
+		'Access-Control-Allow-Methods',
+		'GET, POST, PUT, DELETE, OPTIONS'
+	)
+	res.setHeader(
+		'Access-Control-Allow-Headers',
+		'Content-Type, Authorization, Accept, Origin, X-Requested-With'
+	)
 	next()
 })
 
