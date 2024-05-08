@@ -1659,6 +1659,122 @@ const transporter = nodemailer.createTransport({
 	},
 })
 
+app.post('/sendEmailVerificationCode', async (req, res) => {
+	const { email } = req.body
+	if (!email) {
+		return res.status(400).json({ error: 'Email не указан' })
+	}
+
+	try {
+		const verifiedEmail = await db.query(
+			'SELECT * FROM users WHERE email = ? AND email_verified = true',
+			[email]
+		)
+		if (verifiedEmail.length > 0) {
+			return res.status(400).json({ error: 'Email уже подтвержден' })
+		}
+
+		const existingEmail = await db.query(
+			'SELECT * FROM users WHERE email = ?',
+			[email]
+		)
+		if (existingEmail.length > 0) {
+			return res.status(400).json({ error: 'Email уже существует' })
+		}
+
+		const verificationCode = Math.floor(100000 + Math.random() * 900000)
+
+		await db.query(
+			'INSERT INTO email_verification (email, code) VALUES (?, ?) ON DUPLICATE KEY UPDATE code = ?',
+			[email, verificationCode, verificationCode]
+		)
+
+		if (!existingEmail.length) {
+			const mailOptions = {
+				from: 'noukin68@mail.ru',
+				to: email,
+				subject: 'Код подтверждения электронной почты',
+				text: `Ваш код подтверждения: ${verificationCode}`,
+			}
+
+			await transporter.sendMail(mailOptions)
+		}
+
+		return res.status(200).json({ message: 'Код подтверждения отправлен' })
+	} catch (error) {
+		console.error(error)
+		return res.status(500).json({
+			error:
+				'Ошибка отправки кода подтверждения. Проверьте адрес электронной почты.',
+		})
+	}
+})
+
+app.post('/verifyEmail', (req, res) => {
+	const { email, verificationCode } = req.body
+
+	if (!email || !verificationCode) {
+		console.log('Ошибка: Недостаточно данных для проверки')
+		return res.status(400).json({ error: 'Недостаточно данных для проверки' })
+	}
+
+	try {
+		db.query(
+			'SELECT code FROM email_verification WHERE email = ?',
+			[email],
+			(err, results) => {
+				if (err) {
+					return res
+						.status(500)
+						.json({ error: 'Ошибка при запросе к базе данных' })
+				}
+
+				if (results.length === 0) {
+					return res
+						.status(404)
+						.json({ verified: false, error: 'Email не найден в базе данных' })
+				}
+
+				const storedCode = results[0].code
+
+				if (storedCode === verificationCode) {
+					db.query(
+						'UPDATE users SET email_verified = true WHERE email = ?',
+						[email],
+						(err, results) => {
+							if (err) {
+								console.error(
+									'Ошибка при обновлении статуса подтверждения email:',
+									err
+								)
+								return res.status(500).json({
+									error: 'Ошибка при обновлении статуса подтверждения email',
+								})
+							}
+
+							console.log('Email успешно подтвержден')
+
+							db.query('DELETE FROM email_verification WHERE email = ?', [
+								email,
+							])
+
+							return res.status(200).json({ verified: true })
+						}
+					)
+				} else {
+					return res
+						.status(400)
+						.json({ verified: false, error: 'Неправильный код подтверждения' })
+				}
+			}
+		)
+	} catch (error) {
+		return res
+			.status(500)
+			.json({ error: 'Ошибка при проверке кода подтверждения' })
+	}
+})
+
 app.post('/checkEmailExists', async (req, res) => {
 	const { email } = req.body
 
