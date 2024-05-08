@@ -1738,29 +1738,9 @@ app.post('/verifyEmail', (req, res) => {
 				const storedCode = results[0].code
 
 				if (storedCode === verificationCode) {
-					db.query(
-						'UPDATE users SET email_verified = true WHERE email = ?',
-						[email],
-						(err, results) => {
-							if (err) {
-								console.error(
-									'Ошибка при обновлении статуса подтверждения email:',
-									err
-								)
-								return res.status(500).json({
-									error: 'Ошибка при обновлении статуса подтверждения email',
-								})
-							}
+					db.query('DELETE FROM email_verification WHERE email = ?', [email])
 
-							console.log('Email успешно подтвержден')
-
-							db.query('DELETE FROM email_verification WHERE email = ?', [
-								email,
-							])
-
-							return res.status(200).json({ verified: true })
-						}
-					)
+					return res.status(200).json({ verified: true })
 				} else {
 					return res
 						.status(400)
