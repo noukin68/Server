@@ -1,7 +1,7 @@
 const express = require('express')
 const mysql = require('mysql')
 const cors = require('cors')
-const https = require('https')
+const http = require('http')
 const socketIo = require('socket.io')
 const bcrypt = require('bcrypt')
 const { v4: uuidv4 } = require('uuid')
@@ -22,13 +22,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage })
 
 const app = express()
-const server = https.createServer(
+/*const server = https.createServer(
 	{
 		key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
 		cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
 	},
 	app
-)
+)*/
+const server = http.createServer(app)
 const io = socketIo(server)
 
 const port = 3000
@@ -46,7 +47,7 @@ db.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
 	console.log('The solution is: ', results[0].solution)
 })
 
-//app.use('/uploads', cors(), express.static('uploads'))
+app.use('/uploads', cors(), express.static('uploads'))
 app.use(cors())
 app.use(express.json())
 /*app.use((req, res, next) => {
@@ -1526,7 +1527,7 @@ app.post('/uploadAvatar/:userId', upload.single('avatar'), (req, res) => {
 
 	// Обновляем URL аватара в базе данных
 	const avatarUrl =
-		'https://techproguide.store/uploads/' + avatarFile.originalname
+		'http://62.217.182.138:3000/uploads/' + avatarFile.originalname
 	const sql = 'UPDATE users SET avatar_url = ? WHERE id = ?'
 	db.query(sql, [avatarUrl, userId], (err, result) => {
 		if (err) {
