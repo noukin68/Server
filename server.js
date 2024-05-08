@@ -1,7 +1,7 @@
 const express = require('express')
 const mysql = require('mysql')
 const cors = require('cors')
-const http = require('http')
+const https = require('https')
 const socketIo = require('socket.io')
 const bcrypt = require('bcrypt')
 const { v4: uuidv4 } = require('uuid')
@@ -22,7 +22,13 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage })
 
 const app = express()
-const server = http.createServer(app)
+const server = https.createServer(
+	{
+		key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+		cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
+	},
+	app
+)
 const io = socketIo(server)
 
 const port = 3000
@@ -44,7 +50,7 @@ app.use('/uploads', cors(), express.static('uploads'))
 app.use(cors())
 app.use(express.json())
 app.use((req, res, next) => {
-	res.setHeader('Access-Control-Allow-Origin', '*')
+	res.setHeader('Access-Control-Allow-Origin', 'https://62.217.182.138:3000')
 	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
 	res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 	next()
