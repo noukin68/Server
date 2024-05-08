@@ -1,7 +1,7 @@
 const express = require('express')
 const mysql = require('mysql')
 const cors = require('cors')
-const http = require('http')
+const https = require('https')
 const socketIo = require('socket.io')
 const bcrypt = require('bcrypt')
 const { v4: uuidv4 } = require('uuid')
@@ -9,11 +9,6 @@ const crypto = require('crypto')
 const bodyParser = require('body-parser')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
-
-var corsOptions = {
-	origin: 'https://techproguide.ru',
-	optionsSuccessStatus: 200,
-}
 
 const multer = require('multer')
 const storage = multer.diskStorage({
@@ -27,7 +22,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage })
 
 const app = express()
-const server = http.createServer(app)
+app.options('*', cors())
+const server = https.createServer(
+	{
+		key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+		cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
+	},
+	app
+)
 const io = socketIo(server)
 
 const port = 3000
@@ -1247,7 +1249,7 @@ app.post('/userregister', (req, res) => {
 })
 
 // Маршрут для аутентификации пользователя
-app.post('/userlogin', cors(corsOptions), (req, res) => {
+app.post('/userlogin', cors(), (req, res) => {
 	const { email, password } = req.body
 
 	// Проверка наличия обязательных полей в запросе
