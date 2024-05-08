@@ -1,7 +1,7 @@
 const express = require('express')
 const mysql = require('mysql')
 const cors = require('cors')
-const http = require('http')
+const https = require('https')
 const socketIo = require('socket.io')
 const bcrypt = require('bcrypt')
 const { v4: uuidv4 } = require('uuid')
@@ -22,8 +22,26 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage })
 
 const app = express()
-const server = http.createServer(app)
+const server = https.createServer(
+	{
+		key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+		cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
+	},
+	app
+)
 const io = socketIo(server)
+
+const corsOptions = {
+	origin: ['https://techproguide.ru'],
+	allowedHeaders: [
+		'Content-Type',
+		'Authorization',
+		'Access-Control-Allow-Methods',
+		'Access-Control-Request-Headers',
+	],
+	credentials: true,
+	enablePreflight: true,
+}
 
 const port = 3000
 
@@ -41,7 +59,8 @@ db.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
 })
 
 app.use('/uploads', cors(), express.static('uploads'))
-app.use(cors())
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 app.use(express.json())
 app.use((req, res, next) => {
 	res.setHeader('Access-Control-Allow-Origin', '*')
