@@ -1,7 +1,7 @@
 const express = require('express')
 const mysql = require('mysql')
 const cors = require('cors')
-const https = require('https')
+const http = require('http')
 const socketIo = require('socket.io')
 const bcrypt = require('bcrypt')
 const { v4: uuidv4 } = require('uuid')
@@ -22,14 +22,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage })
 
 const app = express()
-app.options('*', cors())
-const server = https.createServer(
-	{
-		key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
-		cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
-	},
-	app
-)
+const server = http.createServer(app)
 const io = socketIo(server)
 
 const port = 3000
@@ -1249,7 +1242,7 @@ app.post('/userregister', (req, res) => {
 })
 
 // Маршрут для аутентификации пользователя
-app.post('/userlogin', cors(), (req, res) => {
+app.post('/userlogin', (req, res) => {
 	const { email, password } = req.body
 
 	// Проверка наличия обязательных полей в запросе
