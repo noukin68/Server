@@ -27,7 +27,7 @@ const options = {
 	cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
 }
 
-const server = http.createServer(options, app)
+const server = http.createServer(app)
 const io = socketIo(server)
 
 const port = 3000
