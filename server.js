@@ -32,7 +32,7 @@ const app = express()
 const server = http.createServer(app)
 const io = socketIo(server)
 
-const port = 3000
+const port = 443
 
 const db = mysql.createPool({
 	connectionLimit: 10,
