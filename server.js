@@ -1,7 +1,7 @@
 const express = require('express')
 const mysql = require('mysql')
 const cors = require('cors')
-const http = require('http')
+const https = require('https')
 const socketIo = require('socket.io')
 const bcrypt = require('bcrypt')
 const { v4: uuidv4 } = require('uuid')
@@ -27,7 +27,7 @@ const options = {
 	cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
 }
 
-const server = http.createServer(app)
+const server = https.createServer(options, app)
 const io = socketIo(server)
 
 const port = 3000
