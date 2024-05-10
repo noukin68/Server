@@ -51,6 +51,11 @@ app.use(express.json())
 	next()
 })*/
 
+app.get('/api/data', (req, res) => {
+	// Обработка запроса и отправка ответа
+	res.json({ message: 'Hello from API' })
+})
+
 app.post('/api/data', (req, res) => {
 	// Получение данных из тела запроса
 	const data = req.body
