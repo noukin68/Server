@@ -24,14 +24,8 @@ const upload = multer({ storage: storage })
 const app = express()
 const server = https.createServer(
 	{
-		key: fs.readFileSync('/path/to/key.pem'),
-		cert: fs.readFileSync('/path/to/cert.pem'),
-		secureOptions:
-			constants.SSL_OP_NO_SSLv3 |
-			constants.SSL_OP_NO_TLSv1 |
-			constants.SSL_OP_NO_TLSv1_1,
-		ciphers:
-			'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256',
+		key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+		cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
 	},
 	app
 )
