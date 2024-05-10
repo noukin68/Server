@@ -1,44 +1,35 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
-const https = require('https')
-const fs = require('fs')
-const path = require('path')
 
-// Настройка CORS
-app.use(cors())
+// Middleware
+app.use(cors()) // Разрешить cross-origin запросы
+app.use(express.json()) // Для парсинга JSON-данных из тела запроса
 
-// Для парсинга JSON-данных из тела запроса
-app.use(express.json())
-
-// Путь к SSL-сертификатам
-const certPath = path.join(__dirname, 'certs')
-
-// Загрузка SSL-сертификатов
-const serverCert = fs.readFileSync(path.join(certPath, 'cert.pem'))
-const serverKey = fs.readFileSync(path.join(certPath, 'key.pem'))
-const cloudflareRootCert = fs.readFileSync(
-	path.join(certPath, 'cloudflare.crt')
-)
-
-// Создание HTTPS-сервера
-const httpsServer = https.createServer(
-	{
-		cert: serverCert,
-		key: serverKey,
-		ca: [cloudflareRootCert],
-		rejectUnauthorized: true,
-	},
-	app
-)
-
-// Запуск HTTPS-сервера на порту 3000 и IP-адресе 62.217.182.138
-httpsServer.listen(3000, '62.217.182.138', () => {
-	console.log('API server running on https://62.217.182.138:3000')
-})
-
-// Пример маршрута
+// Маршруты
 app.get('/api/data', (req, res) => {
 	// Обработка запроса и отправка ответа
 	res.json({ message: 'Hello from API' })
+})
+
+app.post('/api/data', (req, res) => {
+	// Получение данных из тела запроса
+	const data = req.body
+
+	// Обработка данных и отправка ответа
+	res.json({ message: 'Data received', data })
+})
+
+// Обработка ошибок
+app.use((err, req, res, next) => {
+	console.error(err.stack)
+	res.status(500).json({ message: 'Something went wrong' })
+})
+
+// Запуск сервера
+const PORT = 3000
+const HOST = '62.217.182.138'
+
+app.listen(PORT, HOST, () => {
+	console.log('API server running on http://${HOST}:${PORT}')
 })
