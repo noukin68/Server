@@ -1,14 +1,6 @@
-const express = require('express')
-const mysql = require('mysql')
-const cors = require('cors')
-const https = require('https')
-const socketIo = require('socket.io')
-const bcrypt = require('bcrypt')
-const { v4: uuidv4 } = require('uuid')
-const crypto = require('crypto')
-const bodyParser = require('body-parser')
+const tls = require('tls')
 const fs = require('fs')
-const nodemailer = require('nodemailer')
+const path = require('path')
 
 // Загрузка сертификата сервера
 const serverCert = fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem'))
@@ -27,10 +19,19 @@ const options = {
 	rejectUnauthorized: true,
 }
 
-https
-	.createServer(options, function (req, res) {
-		res.writeHead(200, { 'Content-Type': 'text/plain' })
-		res.end('Hello World\n')
-	})
-	.listen(443, '62.217.182.138')
-console.log('Server running at https://62.217.182.138')
+// Создание TLS-соединения и проверка цепочки сертификатов
+const tlsSocket = tls.connect(443, '62.217.182.138', options, () => {
+	console.log('TLS connection established')
+
+	// Получение информации о цепочке сертификатов
+	const peerCertificate = tlsSocket.getPeerCertificate(true)
+	console.log('Peer certificate chain:', peerCertificate)
+
+	// Проверка корректности цепочки сертификатов
+	tlsSocket.verify()
+	console.log('Certificate chain verified successfully')
+})
+
+tlsSocket.on('error', err => {
+	console.error('TLS connection error:', err)
+})
