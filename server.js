@@ -1,36 +1,44 @@
 const express = require('express')
-const mysql = require('mysql')
+const app = express()
 const cors = require('cors')
 const https = require('https')
-const socketIo = require('socket.io')
-const bcrypt = require('bcrypt')
-const { v4: uuidv4 } = require('uuid')
-const crypto = require('crypto')
-const bodyParser = require('body-parser')
 const fs = require('fs')
-const nodemailer = require('nodemailer')
+const path = require('path')
 
-// Загрузка сертификата сервера
-const serverCert = fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem'))
+// Настройка CORS
+app.use(cors())
 
-// Загрузка ключа сервера
-const serverKey = fs.readFileSync(path.join(__dirname, 'cert', 'key.pem'))
+// Для парсинга JSON-данных из тела запроса
+app.use(express.json())
 
-// Загрузка корневого сертификата
-const rootCert = fs.readFileSync(path.join(__dirname, 'cert', 'cloudflare.crt'))
+// Путь к SSL-сертификатам
+const certPath = path.join(__dirname, 'certs')
 
-// Создание опций для проверки цепочки сертификатов
-const options = {
-	cert: serverCert,
-	key: serverKey,
-	ca: [rootCert],
-	rejectUnauthorized: true,
-}
+// Загрузка SSL-сертификатов
+const serverCert = fs.readFileSync(path.join(certPath, 'cert.pem'))
+const serverKey = fs.readFileSync(path.join(certPath, 'key.pem'))
+const cloudflareRootCert = fs.readFileSync(
+	path.join(certPath, 'cloudflare.crt')
+)
 
-https
-	.createServer(options, function (req, res) {
-		res.writeHead(200, { 'Content-Type': 'text/plain' })
-		res.end('Hello World\n')
-	})
-	.listen(443, '62.217.182.138')
-console.log('Server running at https://62.217.182.138')
+// Создание HTTPS-сервера
+const httpsServer = https.createServer(
+	{
+		cert: serverCert,
+		key: serverKey,
+		ca: [cloudflareRootCert],
+		rejectUnauthorized: true,
+	},
+	app
+)
+
+// Запуск HTTPS-сервера на порту 3000 и IP-адресе 62.217.182.138
+httpsServer.listen(3000, '62.217.182.138', () => {
+	console.log('API server running on https://62.217.182.138:3000')
+})
+
+// Пример маршрута
+app.get('/api/data', (req, res) => {
+	// Обработка запроса и отправка ответа
+	res.json({ message: 'Hello from API' })
+})
