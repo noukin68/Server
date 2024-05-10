@@ -10,15 +10,21 @@ const bodyParser = require('body-parser')
 const fs = require('fs')
 const nodemailer = require('nodemailer')
 
+// Загрузка сертификата сервера
+const serverCert = fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem'))
+
+// Загрузка ключа сервера
+const serverKey = fs.readFileSync(path.join(__dirname, 'cert', 'key.pem'))
+
 // Загрузка корневого сертификата
-const rootCert = fs.readFileSync('cert/cloudflare.crt')
+const rootCert = fs.readFileSync(path.join(__dirname, 'cert', 'cloudflare.crt'))
 
-// Добавление корневого сертификата в список доверенных
-https.globalAgent.options.ca = [rootCert]
-
+// Создание опций для проверки цепочки сертификатов
 const options = {
-	key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
-	cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
+	cert: serverCert,
+	key: serverKey,
+	ca: [rootCert],
+	rejectUnauthorized: true,
 }
 
 https
