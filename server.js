@@ -32,7 +32,7 @@ const server = https.createServer(
 )
 const io = socketIo(server)
 
-const port = 443
+const port = 4000
 
 const db = mysql.createPool({
 	connectionLimit: 10,
