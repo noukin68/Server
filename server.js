@@ -47,7 +47,7 @@ db.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
 	console.log('The solution is: ', results[0].solution)
 })
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+app.use('/uploads', cors(), express.static('uploads'))
 app.use(cors())
 app.use(express.json())
 /*app.use((req, res, next) => {
