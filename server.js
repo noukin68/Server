@@ -1,7 +1,7 @@
 const express = require('express')
 const mysql = require('mysql')
 const cors = require('cors')
-const https = require('https')
+const http = require('http')
 const socketIo = require('socket.io')
 const bcrypt = require('bcrypt')
 const { v4: uuidv4 } = require('uuid')
@@ -22,16 +22,17 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage })
 
 const app = express()
-const server = https.createServer(
+const server = http.createServer(app)
+/*const server = https.createServer(
 	{
 		key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
 		cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem')),
 	},
 	app
-)
+)*/
 const io = socketIo(server)
 
-const port = 8443
+const port = 3000
 
 const db = mysql.createPool({
 	connectionLimit: 10,
