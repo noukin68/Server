@@ -1,7 +1,7 @@
 const express = require('express')
 const mysql = require('mysql')
 const cors = require('cors')
-const https = require('node:https')
+const https = require('https')
 const socketIo = require('socket.io')
 const bcrypt = require('bcrypt')
 const { v4: uuidv4 } = require('uuid')
@@ -32,7 +32,7 @@ const server = https.createServer(
 )
 const io = socketIo(server)
 
-const port = 4433
+const port = 3000
 
 const db = mysql.createPool({
 	connectionLimit: 10,
@@ -50,6 +50,8 @@ db.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
 app.use('/uploads', cors(), express.static('uploads'))
 app.use(cors())
 app.use(express.json())
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 /*app.use((req, res, next) => {
 	res.setHeader('Access-Control-Allow-Origin', '*')
 	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
