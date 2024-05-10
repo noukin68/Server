@@ -47,11 +47,9 @@ db.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
 	console.log('The solution is: ', results[0].solution)
 })
 
-app.use('/uploads', cors(), express.static('uploads'))
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 app.use(cors())
 app.use(express.json())
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
 /*app.use((req, res, next) => {
 	res.setHeader('Access-Control-Allow-Origin', '*')
 	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
