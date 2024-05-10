@@ -11,7 +11,7 @@ const fs = require('fs')
 const nodemailer = require('nodemailer')
 
 // Загрузка корневого сертификата
-const rootCert = fs.readFileSync('./cert/cloudflare.crt')
+const rootCert = fs.readFileSync('cert/cloudflare.crt')
 
 // Добавление корневого сертификата в список доверенных
 https.globalAgent.options.ca = [rootCert]
