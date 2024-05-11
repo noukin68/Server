@@ -1069,6 +1069,10 @@ io.on('connection', socket => {
 		delete clients.wpf[uid]
 	})
 
+	socket.on('disconnect-uid', uid => {
+		socket.broadcast.emit('remove-uid', uid)
+	})
+
 	socket.on('command', command => {
 		const targetUid = command.uid
 		const action = command.action
