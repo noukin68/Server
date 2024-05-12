@@ -1401,8 +1401,8 @@ app.post('/purchaseLicense', (req, res) => {
             <p>Спасибо за покупку лицензии на ${selectedPlan.days} дней.</p>
             <p>Вы можете скачать приложение по следующим ссылкам:</p>
             <ul>
-              <li><a href="https://drive.google.com/file/d/1YiVTvAWPweKlsw3hS7ugv4aodlTuAdOQ/view?usp=sharing">Скачать для Windows</a></li>
-              <li><a href="https://drive.google.com/file/d/1GuuTZkjKbry6QazoDv_AgF3jyIZ2izxk/view?usp=sharing">Скачать для Android</a></li>
+              <li><a href="https://drive.google.com/file/d/1IaIYGE_LoKVj6PHo_E7jizMgPEeOqZZA/view?usp=sharing">Скачать для Windows</a></li>
+              <li><a href="https://drive.google.com/file/d/1SYFtx90fazFgG0FsRAZutdA8YFneh5vv/view?usp=sharing">Скачать для Android</a></li>
             </ul>
           `,
 				}
