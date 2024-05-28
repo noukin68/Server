@@ -1102,6 +1102,7 @@ io.on('connection', socket => {
 			return
 		}
 		if (socket.uid !== targetUid) {
+			clients[targetUid] = { totalSeconds }
 			io.to(targetUid).emit('stop-timer', { uid: targetUid, totalSeconds })
 		}
 		timerStopped = true
