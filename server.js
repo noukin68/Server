@@ -30,9 +30,9 @@ const io = socketIo(server)
 
 const db = mysql.createPool({
 	connectionLimit: 10,
-	host: 'marencid.beget.tech',
-	user: 'marencid_tech',
-	password: 'Root123',
+	host: '77.222.47.11',
+	user: 'root',
+	password: '$EoC3S4QCVBEMabD',
 	database: 'marencid_tech',
 })
 
